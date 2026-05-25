@@ -3,213 +3,572 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Wedding of Nama1 & Nama2</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Poppins:wght@300;400;500&family=Great+Vibes&display=swap" rel="stylesheet">
+    <title>Touchless Puzzle Wajah</title>
+    <!-- Tailwind CSS untuk Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MediaPipe untuk AI Hand Tracking -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1656422568/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils@0.6.1629159505/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1620248257/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
 
     <style>
-        :root {
-            --primary: #0a1931; 
-            --accent: #c5a059;  
-            --light: #fdfcf9;   
-            --white: #ffffff;
-            --overlay: rgba(10, 25, 49, 0.65);
+        body {
+            margin: 0;
+            overflow: hidden; /* Mencegah scrolling */
+            background-color: #111827; /* Tailwind gray-900 */
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Poppins', sans-serif; background: var(--light); color: var(--primary); overflow-x: hidden; scroll-behavior: smooth; }
-
-        /* --- HERO SECTION --- */
-        .hero {
-            height: 100vh; display: flex; align-items: center; justify-content: center;
-            background-image: linear-gradient(var(--overlay), var(--overlay)), 
-                              url('https://wsrv.nl/?url=https://drive.google.com/uc?id=1NUwYfEBqfnLp8N8CnhFdjjynQzK-T9PP');
-            background-size: cover; background-position: center;
-            position: fixed; width: 100%; top: 0; left: 0; z-index: 9999;
-            transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1), opacity 1s ease;
-            text-align: center; color: var(--white);
-        }
-        .hero.opened { transform: translateY(-100%); opacity: 0; pointer-events: none; }
-        .hero-content { padding: 30px; animation: fadeInDown 1.5s ease; }
-        
-        /* Font nama panggilan di cover dibuat lebih besar & elegan */
-        .couple-name-hero { font-family: 'Great Vibes', cursive; font-size: clamp(3.5rem, 10vw, 5rem); color: var(--accent); margin: 10px 0; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); }
-        
-        .btn-primary { 
-            background: linear-gradient(135deg, var(--accent), #ae8a46); color: var(--white); 
-            border: none; padding: 16px 45px; font-family: 'Cinzel', serif; 
-            letter-spacing: 2px; cursor: pointer; transition: 0.4s; margin-top: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 1rem; border-radius: 4px; text-decoration: none; display: inline-block;
+        /* Video feed asli disembunyikan (hanya untuk proses AI) */
+        #video-input {
+            display: none;
         }
 
-        /* --- CONTENT AREA --- */
-        #main-content { opacity: 0; transition: opacity 2s ease; padding-top: 50px; }
-        #main-content.visible { opacity: 1; }
-        .section { padding: 80px 20px; text-align: center; }
-        .container { max-width: 800px; margin: 0 auto; }
-        
-        .salam { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 600; margin-bottom: 20px; color: var(--accent); }
-        .mempelai-detail h2 { font-family: 'Cinzel', serif; font-size: 1.8rem; color: var(--accent); margin-top: 20px; line-height: 1.4; }
-        .and-sym { font-family: 'Great Vibes', cursive; font-size: 4rem; color: var(--accent); display: block; margin: 15px 0; }
+        /* Tile Puzzle */
+        .puzzle-tile {
+            position: absolute;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #1f2937;
+            border-radius: 4px;
+            background-size: 300px 300px; /* Sesuai ukuran board */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: transparent; /* Ubah ke rgba(255,255,255,0.5) jika ingin melihat nomor tile */
+        }
 
-        .dark-bg { background: var(--primary); color: var(--white); position: relative; overflow: hidden; padding: 100px 20px; }
-        .dark-bg::before { content: ""; position: absolute; inset: 0; background: url('https://www.transparenttextures.com/patterns/islamic-art.png'); opacity: 0.2; }
+        /* Efek hover untuk tombol (dipicu juga oleh kursor virtual) */
+        .touchless-btn {
+            transition: all 0.2s ease;
+        }
+        .touchless-btn:hover {
+            transform: scale(1.05);
+            background-color: #3b82f6;
+        }
+        .touchless-btn:active, .touchless-btn.active-pinch {
+            transform: scale(0.95);
+            background-color: #2563eb;
+        }
 
-        .event-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 40px; }
-        .event-card { background: var(--white); padding: 40px; border: 1px solid rgba(197, 160, 89, 0.2); box-shadow: 0 15px 35px rgba(0,0,0,0.05); border-radius: 8px; color: var(--primary); }
-        .btn-maps { background: #db4437; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-size: 0.9rem; margin-top: 20px; display: inline-block; transition: 0.3s; font-weight: 500; }
-
-        .card-box { background: var(--white); padding: 35px; border-radius: 12px; border: 1px solid rgba(197, 160, 89, 0.3); margin-top: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        input, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; font-family: inherit; }
-        .btn-wa { background: #25d366; color: white; border: none; padding: 12px 30px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: 600; }
-
-        .gift-card { background: #eff6ff; padding: 25px; border-radius: 10px; border: 2px dashed var(--accent); margin-top: 20px; }
-        .copy-btn { background: var(--primary); color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-top: 10px; }
-
-        .music-control { position: fixed; bottom: 30px; right: 30px; z-index: 1000; display: none; }
-        #music-btn { width: 55px; height: 55px; border-radius: 50%; border: none; background: var(--accent); color: white; cursor: pointer; font-size: 22px; }
-        .rotate { animation: rotating 5s linear infinite; }
-        @keyframes rotating { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .reveal { opacity: 0; transform: translateY(40px); transition: all 1.2s ease-out; }
-        .reveal.active { opacity: 1; transform: translateY(0); }
-
-        @media (max-width: 768px) { .event-grid { grid-template-columns: 1fr; } }
+        /* Tile Kosong */
+        .tile-empty {
+            opacity: 0;
+            pointer-events: none;
+        }
     </style>
 </head>
-<body>
+<body class="w-full h-screen relative flex flex-col items-center justify-center">
 
-    <div id="player" style="position: absolute; left: -9999px;"></div>
-    <div class="music-control" id="music-container"><button id="music-btn" class="rotate">🎵</button></div>
+    <!-- Elemen Video untuk Kamera -->
+    <video id="video-input" autoplay playsinline></video>
 
-    <header class="hero" id="hero-section">
-        <div class="hero-content">
-            <p style="letter-spacing: 5px; text-transform: uppercase; font-size: 0.8rem; font-weight: 300;">Walimatul 'Ursy</p>
-            <h1 class="couple-name-hero">Nama1 & Nama2</h1>
-            <div style="margin: 20px 0; border-top: 1px solid rgba(255,255,255,0.3); border-bottom: 1px solid rgba(255,255,255,0.3); padding: 15px;">
-                <p style="font-size: 0.8rem; font-weight: 300;">Kepada Yth. Bapak/Ibu/Saudara/i:</p>
-                <h2 id="nama-penerima" style="color: var(--accent); font-family: 'Cormorant Garamond', serif; font-size: 2rem;">Tamu Undangan</h2>
-            </div>
-            <button class="btn-primary" onclick="bukaUndangan()">Buka Undangan</button>
+    <!-- Canvas untuk Menampilkan Feed Kamera yang di-Mirror di Menu Utama -->
+    <canvas id="camera-preview" class="absolute inset-0 w-full h-full object-cover opacity-40 z-0 transform scale-x-[-1]"></canvas>
+
+    <!-- Canvas untuk Menggambar Rangka Tangan (Feedback Visual) -->
+    <canvas id="hand-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-40"></canvas>
+
+    <!-- Kursor Virtual (Titik Merah) -->
+    <div id="virtual-cursor" class="fixed top-0 left-0 w-8 h-8 bg-red-500 rounded-full z-50 pointer-events-none transform -translate-x-1/2 -translate-y-1/2 opacity-0 shadow-[0_0_15px_rgba(239,68,68,0.8)] transition-all duration-75">
+        <div id="cursor-inner" class="w-full h-full rounded-full border-2 border-white transform transition-transform duration-200"></div>
+    </div>
+
+    <!-- UI LAYER (Z-index diatas canvas kamera, dibawah cursor) -->
+    <div id="ui-layer" class="relative z-30 flex flex-col items-center justify-center w-full h-full">
+        
+        <!-- Layar Loading -->
+        <div id="loading-screen" class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+            <h2 class="text-2xl font-bold text-center">Memuat Kamera & AI...</h2>
+            <p class="text-gray-400 mt-2 text-center max-w-md">Harap izinkan akses kamera. Pastikan Anda berada di tempat yang cukup terang.</p>
         </div>
-    </header>
 
-    <main id="main-content">
-        <section class="section container reveal">
-            <p class="salam">اَلسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَا تُهُ</p>
-            <p>Maha suci Allah yang telah menciptakan makhluk-Nya berpasang-pasangan. Ya Allah perkenankanlah kami merangkai kasih sayang dalam ikatan pernikahan:</p>
-            <div class="mempelai-detail">
-                <h2>Nama Mempelai Lakilaki</h2>
-                <p>Putra dari Bapak Fulan & Ibu Fulanah</p>
-                <span class="and-sym">&</span>
-                <h2>Nama Mempelai Perempuan</h2>
-                <p>Putri dari Bapak Fulan & Ibu Fulanah</p>
+        <!-- Layar Mulai / Ambil Foto -->
+        <div id="start-screen" class="hidden flex-col items-center w-full max-w-md px-6">
+            <h1 class="text-4xl font-bold text-center mb-2 drop-shadow-lg">Puzzle Wajah <br><span class="text-blue-400">Touchless</span></h1>
+            <p class="text-gray-300 text-center mb-8 bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700">
+                Gunakan tangan Anda sebagai kursor.<br>Posisikan wajah Anda di tengah layar, arahkan kursor ke tombol di bawah, dan <b>Cubit (temukan ujung jempol & telunjuk)</b> untuk mengambil foto!
+            </p>
+            
+            <!-- Panduan kotak di tengah wajah -->
+            <div class="w-64 h-64 border-2 border-dashed border-yellow-400 rounded-lg mb-8 flex items-center justify-center relative bg-black bg-opacity-20 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
+                <span class="text-yellow-400 font-bold bg-black bg-opacity-50 px-2 py-1 rounded">Area Puzzle</span>
             </div>
-        </section>
 
-        <section class="section dark-bg">
-            <div class="container reveal">
-                <h2 style="font-family: 'Cinzel', serif; color: var(--accent); margin-bottom: 30px;">Waktu & Lokasi</h2>
-                <div class="event-grid">
-                    <div class="event-card">
-                        <h3 style="font-family: 'Cinzel', serif; color: var(--accent); margin-bottom: 15px;">Akad Nikah</h3>
-                        <p style="font-weight: 600;">Jum'at, 11 Januari 0000</p>
-                        <p>08:00 – 10:00 WIB</p>
-                        <hr style="margin: 15px 0; opacity: 0.1;">
-                        <p style="font-size: 0.85rem;"><b>Kediaman Mempelai Wanita</b><br>Lokasi sesuai titik Google Maps</p>
-                    </div>
-                    <div class="event-card">
-                        <h3 style="font-family: 'Cinzel', serif; color: var(--accent); margin-bottom: 15px;">Resepsi</h3>
-                        <p style="font-weight: 600;">Minggu, 12 Juli 2026</p>
-                        <p>11:00 – Selesai</p>
-                        <hr style="margin: 15px 0; opacity: 0.1;">
-                        <p style="font-size: 0.85rem;"><b>Kediaman Mempelai Wanita</b><br>Lokasi sesuai titik Google Maps</p>
-                    </div>
-                </div>
-                <a href="https://maps.app.goo.gl/8Wo23FHgreuMGBTy6" target="_blank" class="btn-maps">📍 Buka Rute Google Maps</a>
+            <button id="btn-capture" class="touchless-btn w-full py-4 bg-blue-600 text-white font-bold text-xl rounded-full shadow-lg border-2 border-blue-400 pointer-events-auto">
+                📸 Cubit Disini Untuk Foto
+            </button>
+        </div>
+
+        <!-- Layar Permainan (Puzzle) -->
+        <div id="game-screen" class="hidden flex-col items-center">
+            <h2 class="text-3xl font-bold mb-4">Susun Wajah Anda!</h2>
+            <p class="mb-4 text-gray-300 bg-gray-800 px-4 py-2 rounded-full text-sm">
+                Arahkan ke kotak di sebelah area kosong dan <b>Cubit</b> untuk menggeser.
+            </p>
+            
+            <!-- Papan Puzzle -->
+            <div id="puzzle-board" class="relative w-[300px] h-[300px] bg-gray-800 border-4 border-gray-600 rounded-lg shadow-2xl overflow-hidden mb-6 pointer-events-auto">
+                <!-- Tiles akan digenerate disini oleh JS -->
             </div>
-        </section>
 
-        <section class="section container reveal">
-            <h2 style="font-family: 'Cinzel', serif; color: var(--accent);">Kartu Ucapan</h2>
-            <div class="card-box">
-                <input type="text" id="nama-pengirim" placeholder="Nama Anda">
-                <textarea id="pesan-doa" rows="4" placeholder="Tuliskan ucapan & doa restu..."></textarea>
-                <button class="btn-wa" onclick="kirimWA()">Kirim Ucapan ke WhatsApp</button>
+            <div class="flex gap-4">
+                <button id="btn-restart" class="touchless-btn px-6 py-3 bg-red-600 text-white font-bold rounded-full shadow-lg pointer-events-auto">
+                    🔄 Ulangi
+                </button>
+                <button id="btn-rephoto" class="touchless-btn px-6 py-3 bg-gray-600 text-white font-bold rounded-full shadow-lg pointer-events-auto">
+                    📷 Foto Ulang
+                </button>
             </div>
-        </section>
+        </div>
 
-        <section class="section container reveal">
-            <h2 style="font-family: 'Cinzel', serif; color: var(--accent);">Wedding Gift</h2>
-            <p style="font-size: 0.9rem;">Bagi Bapak/Ibu yang ingin memberikan tanda kasih secara digital, dapat melalui:</p>
-            <div class="gift-card">
-                <p style="font-weight: 500; color: #118eea;">DANA</p>
-                <p style="font-weight: 600; font-size: 1.5rem; margin: 5px 0;">085716731106</p>
-                <p>a.n Ahmad Rosyid</p>
-                <button class="copy-btn" onclick="copyNo()">Salin Nomor DANA</button>
-            </div>
-        </section>
+        <!-- Layar Menang -->
+        <div id="win-screen" class="hidden flex-col items-center bg-green-900 bg-opacity-90 p-10 rounded-2xl border-4 border-green-500 shadow-2xl backdrop-blur-md text-center absolute z-50">
+            <h2 class="text-5xl font-bold text-green-300 mb-4 animate-bounce">LUAR BIASA! 🎉</h2>
+            <p class="text-xl mb-8">Anda berhasil menyusun wajah Anda tanpa menyentuh layar sama sekali!</p>
+            <button id="btn-play-again" class="touchless-btn px-8 py-4 bg-green-600 text-white font-bold text-xl rounded-full shadow-lg border-2 border-green-400 pointer-events-auto">
+                Main Lagi
+            </button>
+        </div>
 
-        <footer class="section" style="background: #f0ede6; padding-bottom: 100px;">
-            <p>Atas kehadiran dan doa restunya, kami ucapkan terima kasih.</p>
-            <h2 style="font-family: 'Cinzel', serif; font-size: 1.8rem; margin-top: 15px; color: var(--accent);">Nama1 & Nama2</h2>
-        </footer>
-    </main>
+    </div>
+
+    <!-- Data Audio Sederhana (Optional UI sound) -->
+    <audio id="sfx-click" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU" preload="auto"></audio>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        document.getElementById('nama-penerima').innerText = urlParams.get('to') || 'Tamu Undangan';
+        // --- KONFIGURASI DAN STATE ---
+        const GRID_SIZE = 3; // 3x3 Puzzle
+        const TILE_SIZE = 100; // 300px / 3
+        const NUM_TILES = GRID_SIZE * GRID_SIZE;
+        let puzzleState = []; // Status papan saat ini (array posisi)
+        let solvedState = []; // Status menang
+        let emptyIndex = NUM_TILES - 1; // Index 8 adalah tile kosong
+        let imageDataUrl = ''; // Menyimpan foto pengguna
+        
+        let isModelLoaded = false;
+        
+        // Touchless Logic State
+        let cursorX = window.innerWidth / 2;
+        let cursorY = window.innerHeight / 2;
+        let smoothCursorX = cursorX;
+        let smoothCursorY = cursorY;
+        let isPinching = false;
+        let wasPinching = false;
 
-        let player;
-        const VIDEO_ID = '_ooM-zhA580'; 
-        var tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        // --- ELEMEN DOM ---
+        const videoElement = document.getElementById('video-input');
+        const cameraPreviewCanvas = document.getElementById('camera-preview');
+        const previewCtx = cameraPreviewCanvas.getContext('2d');
+        const handCanvas = document.getElementById('hand-canvas');
+        const handCtx = handCanvas.getContext('2d');
+        const cursorEl = document.getElementById('virtual-cursor');
+        const cursorInner = document.getElementById('cursor-inner');
+        
+        const uiLoading = document.getElementById('loading-screen');
+        const uiStart = document.getElementById('start-screen');
+        const uiGame = document.getElementById('game-screen');
+        const uiWin = document.getElementById('win-screen');
+        
+        const puzzleBoard = document.getElementById('puzzle-board');
+        const btnCapture = document.getElementById('btn-capture');
+        const btnRestart = document.getElementById('btn-restart');
+        const btnRephoto = document.getElementById('btn-rephoto');
+        const btnPlayAgain = document.getElementById('btn-play-again');
 
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('player', {
-                height: '0', width: '0', videoId: VIDEO_ID,
-                playerVars: { 'autoplay': 0, 'loop': 1, 'playlist': VIDEO_ID, 'mute': 1 },
-            });
+        // --- INISIALISASI MEDIAPIPE HANDS ---
+        const hands = new Hands({locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${file}`;
+        }});
+        
+        hands.setOptions({
+            maxNumHands: 1, // Hanya deteksi 1 tangan untuk mempermudah
+            modelComplexity: 1,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.7
+        });
+        
+        hands.onResults(onHandResults);
+
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await hands.send({image: videoElement});
+                drawCameraPreview(); // Update preview layar penuh secara manual
+            },
+            width: 1280,
+            height: 720,
+            facingMode: "user" // Gunakan kamera depan
+        });
+        
+        camera.start().catch(err => {
+            alert("Gagal mengakses kamera. Pastikan memberikan izin kamera di browser Anda.");
+            console.error(err);
+        });
+
+        // Resize handler untuk canvas
+        function resizeCanvas() {
+            cameraPreviewCanvas.width = window.innerWidth;
+            cameraPreviewCanvas.height = window.innerHeight;
+            handCanvas.width = window.innerWidth;
+            handCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function drawCameraPreview() {
+            if (uiStart.classList.contains('hidden')) return; // Hanya gambar jika di menu utama
+            
+            // Gambar video feed ke canvas background (supaya bisa di manipulasi ukurannya)
+            const vw = videoElement.videoWidth;
+            const vh = videoElement.videoHeight;
+            if(!vw || !vh) return;
+
+            const cw = cameraPreviewCanvas.width;
+            const ch = cameraPreviewCanvas.height;
+            
+            // Perhitungan cover (mirip background-size: cover)
+            const scale = Math.max(cw / vw, ch / vh);
+            const w = vw * scale;
+            const h = vh * scale;
+            const x = (cw - w) / 2;
+            const y = (ch - h) / 2;
+
+            previewCtx.clearRect(0, 0, cw, ch);
+            previewCtx.drawImage(videoElement, x, y, w, h);
         }
 
-        function bukaUndangan() {
-            document.getElementById('hero-section').classList.add('opened');
-            document.getElementById('main-content').classList.add('visible');
-            document.getElementById('music-container').style.display = 'block';
-            if (player) { player.unMute(); player.setVolume(80); player.playVideo(); }
-            window.addEventListener('scroll', reveal);
-            setTimeout(reveal, 1000);
-        }
+        // --- LOGIKA UTAMA TRACKING TANGAN ---
+        function onHandResults(results) {
+            // Sembunyikan loading jika ini adalah frame pertama yang sukses diproses
+            if (!isModelLoaded) {
+                isModelLoaded = true;
+                uiLoading.classList.add('hidden');
+                uiStart.classList.remove('hidden');
+            }
 
-        function reveal() {
-            var reveals = document.querySelectorAll(".reveal");
-            for (var i = 0; i < reveals.length; i++) {
-                var windowHeight = window.innerHeight;
-                var elementTop = reveals[i].getBoundingClientRect().top;
-                if (elementTop < windowHeight - 100) reveals[i].classList.add("active");
+            // Bersihkan canvas rangka
+            handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
+
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+                
+                // --- Gambar rangka tangan (Visual Feedback) ---
+                drawConnectors(handCtx, landmarks, HAND_CONNECTIONS, {color: 'rgba(255, 255, 255, 0.4)', lineWidth: 3});
+                drawLandmarks(handCtx, landmarks, {color: 'rgba(59, 130, 246, 0.6)', lineWidth: 1, radius: 4});
+
+                // --- Ambil Koordinat ---
+                const indexFinger = landmarks[8]; // Ujung telunjuk
+                const thumbFinger = landmarks[4]; // Ujung jempol
+
+                // Map koordinat ke layar (Catatan: X di-mirror (1 - x) karena ini kamera depan)
+                const targetX = (1 - indexFinger.x) * window.innerWidth;
+                const targetY = indexFinger.y * window.innerHeight;
+
+                // Hitung Jarak untuk Pinch (Cubit)
+                // Menggunakan jarak Euclidean relatif (tergantung rasio layar, 0.05 biasanya ideal)
+                const dist = Math.hypot(thumbFinger.x - indexFinger.x, thumbFinger.y - indexFinger.y);
+                const pinchThreshold = 0.06;
+                isPinching = dist < pinchThreshold;
+
+                // --- Smoothing Pergerakan Kursor (Linear Interpolation / EMA) ---
+                smoothCursorX += (targetX - smoothCursorX) * 0.4;
+                smoothCursorY += (targetY - smoothCursorY) * 0.4;
+
+                // Update posisi elemen kursor DOM
+                cursorEl.style.left = `${smoothCursorX}px`;
+                cursorEl.style.top = `${smoothCursorY}px`;
+                cursorEl.style.opacity = '1';
+
+                // --- Logika "Klik" via Cubit ---
+                if (isPinching) {
+                    cursorInner.classList.add('scale-50', 'bg-blue-400');
+                    cursorEl.classList.add('scale-75');
+                } else {
+                    cursorInner.classList.remove('scale-50', 'bg-blue-400');
+                    cursorEl.classList.remove('scale-75');
+                }
+
+                // Rising Edge Detection: Saat tepat mulai mencubit
+                if (isPinching && !wasPinching) {
+                    triggerTouchlessClick(smoothCursorX, smoothCursorY);
+                }
+
+                wasPinching = isPinching;
+
+            } else {
+                // Tangan tidak terdeteksi, sembunyikan kursor
+                cursorEl.style.opacity = '0';
+                isPinching = false;
+                wasPinching = false;
             }
         }
 
-        function kirimWA() {
-            const nama = document.getElementById('nama-pengirim').value;
-            const pesan = document.getElementById('pesan-doa').value;
-            if(!nama || !pesan) { alert("Harap isi nama dan pesan ya!"); return; }
-            const teks = `Halo Person1 %26 Person2, saya ${nama}.%0A%0A${pesan}`;
-            window.open(`https://wa.me/6285716731106?text=${teks}`, '_blank');
+        // Mensimulasikan klik pada elemen HTML di bawah kursor virtual
+        function triggerTouchlessClick(x, y) {
+            // Sembunyikan kursor sebentar agar tidak mendeteksi dirinya sendiri
+            const oldDisplay = cursorEl.style.display;
+            cursorEl.style.display = 'none';
+
+            // Dapatkan elemen paling atas di koordinat (x,y)
+            const elem = document.elementFromPoint(x, y);
+
+            // Tampilkan kursor kembali
+            cursorEl.style.display = oldDisplay;
+
+            if (elem) {
+                // Tambahkan efek visual pada tombol
+                if(elem.classList.contains('touchless-btn')) {
+                    elem.classList.add('active-pinch');
+                    setTimeout(() => elem.classList.remove('active-pinch'), 150);
+                }
+
+                // Jika itu bagian dari puzzle, panggil fungsinya
+                if (elem.classList.contains('puzzle-tile')) {
+                    const tileIndex = parseInt(elem.getAttribute('data-index'));
+                    handleTileClick(tileIndex);
+                } 
+                // Jika tombol HTML biasa, simulasikan event 'click'
+                else {
+                    elem.click();
+                }
+            }
         }
 
-        function copyNo() {
-            navigator.clipboard.writeText("085716731106");
-            alert("BERHASIL SALIN, LANGSUNG AJA");
+        // --- LOGIKA APLIKASI / GAME ---
+
+        // 1. Ambil Foto
+        btnCapture.addEventListener('click', () => {
+            takePhoto();
+        });
+
+        function takePhoto() {
+            // Buat canvas sementara untuk mencrop bagian tengah video
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 300; 
+            tempCanvas.height = 300;
+            const ctx = tempCanvas.getContext('2d');
+
+            // Kita harus mencrop video menjadi rasio kotak 1:1 di tengah
+            const vw = videoElement.videoWidth;
+            const vh = videoElement.videoHeight;
+            const size = Math.min(vw, vh); // Ambil ukuran terkecil untuk membuat kotak
+            const startX = (vw - size) / 2;
+            const startY = (vh - size) / 2;
+
+            // Karena video asli di web biasanya tidak di mirror, namun kita tampilkan mirror, 
+            // kita harus flip context agar hasil foto sesuai dengan apa yang user lihat di layar
+            ctx.translate(300, 0);
+            ctx.scale(-1, 1);
+
+            // Draw ke canvas kotak (300x300)
+            ctx.drawImage(videoElement, startX, startY, size, size, 0, 0, 300, 300);
+
+            imageDataUrl = tempCanvas.toDataURL('image/png');
+            
+            // Pindah UI
+            uiStart.classList.add('hidden');
+            cameraPreviewCanvas.classList.add('hidden');
+            uiGame.classList.remove('hidden');
+            uiGame.classList.add('flex');
+
+            initGame();
         }
 
-        let isPlaying = true;
-        document.getElementById('music-btn').onclick = function() {
-            if (isPlaying) { player.pauseVideo(); this.classList.remove('rotate'); }
-            else { player.playVideo(); this.classList.add('rotate'); }
-            isPlaying = !isPlaying;
-        };
+        // 2. Inisialisasi Puzzle
+        function initGame() {
+            puzzleState = [];
+            solvedState = [];
+            puzzleBoard.innerHTML = '';
+            
+            // Setup data awal (0 sampai 8)
+            for (let i = 0; i < NUM_TILES; i++) {
+                puzzleState.push(i);
+                solvedState.push(i);
+            }
+            
+            // Shuffle (Acak dengan simulasi pergerakan agar pasti bisa diselesaikan)
+            shuffleBoard();
+            
+            // Render UI
+            renderBoard();
+        }
+
+        function shuffleBoard() {
+            let blankPos = NUM_TILES - 1;
+            
+            // Lakukan 100 gerakan acak yang valid
+            for (let i = 0; i < 150; i++) {
+                const neighbors = getNeighbors(blankPos);
+                const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+                
+                // Swap posisi array
+                const temp = puzzleState[blankPos];
+                puzzleState[blankPos] = puzzleState[randomNeighbor];
+                puzzleState[randomNeighbor] = temp;
+                
+                blankPos = randomNeighbor;
+            }
+        }
+
+        function getNeighbors(index) {
+            const neighbors = [];
+            const row = Math.floor(index / GRID_SIZE);
+            const col = index % GRID_SIZE;
+
+            if (row > 0) neighbors.push(index - GRID_SIZE); // Atas
+            if (row < GRID_SIZE - 1) neighbors.push(index + GRID_SIZE); // Bawah
+            if (col > 0) neighbors.push(index - 1); // Kiri
+            if (col < GRID_SIZE - 1) neighbors.push(index + 1); // Kanan
+
+            return neighbors;
+        }
+
+        // 3. Render Papan Puzzle ke DOM
+        function renderBoard() {
+            puzzleBoard.innerHTML = '';
+            
+            for (let i = 0; i < NUM_TILES; i++) {
+                const tileValue = puzzleState[i];
+                
+                const tileEl = document.createElement('div');
+                tileEl.classList.add('puzzle-tile');
+                tileEl.setAttribute('data-index', i); // Index posisinya di papan saat ini
+                tileEl.innerText = tileValue + 1; // Untuk debug
+                
+                // Hitung posisi di grid layar (dalam pixel)
+                const row = Math.floor(i / GRID_SIZE);
+                const col = i % GRID_SIZE;
+                tileEl.style.left = `${col * TILE_SIZE}px`;
+                tileEl.style.top = `${row * TILE_SIZE}px`;
+                tileEl.style.width = `${TILE_SIZE}px`;
+                tileEl.style.height = `${TILE_SIZE}px`;
+
+                if (tileValue === NUM_TILES - 1) {
+                    // Ini adalah tile kosong (index 8 asli)
+                    tileEl.classList.add('tile-empty');
+                } else {
+                    // Beri gambar latar belakang (foto crop)
+                    tileEl.style.backgroundImage = `url(${imageDataUrl})`;
+                    
+                    // Hitung potongan gambar yang pas untuk tile ini berdasarkan nilai aslinya
+                    const originalRow = Math.floor(tileValue / GRID_SIZE);
+                    const originalCol = tileValue % GRID_SIZE;
+                    
+                    // Geser background supaya menampilkan potongan yang benar
+                    tileEl.style.backgroundPosition = `-${originalCol * TILE_SIZE}px -${originalRow * TILE_SIZE}px`;
+                }
+
+                puzzleBoard.appendChild(tileEl);
+            }
+        }
+
+        // 4. Logika Pergerakan (Geser)
+        function handleTileClick(boardIndex) {
+            // Cari index dari kotak kosong (bernilai 8)
+            const blankIndex = puzzleState.indexOf(NUM_TILES - 1);
+            
+            // Cek apakah klik bertetangga dengan kotak kosong
+            const neighbors = getNeighbors(blankIndex);
+            
+            if (neighbors.includes(boardIndex)) {
+                // Geser (Swap array)
+                const temp = puzzleState[boardIndex];
+                puzzleState[boardIndex] = puzzleState[blankIndex];
+                puzzleState[blankIndex] = temp;
+                
+                // Update DOM (Animasi geser)
+                updateDOMPositions();
+                
+                // Cek Menang (Beri delay agar animasi selesai dulu)
+                setTimeout(checkWin, 350);
+            }
+        }
+
+        function updateDOMPositions() {
+            // Daripada re-render ulang seluruh elemen yang memutus animasi CSS,
+            // Kita ubah posisi CSS (left, top) dari elemen yang sudah ada.
+            const tiles = puzzleBoard.children;
+            
+            for (let i = 0; i < NUM_TILES; i++) {
+                const currentPos = i; // Posisi di grid
+                const tileValue = puzzleState[i]; // Identitas tile
+                
+                // Cari elemen HTML yang mewakili tileValue ini
+                // Agak tricky, tapi kita bisa update posisi left dan top nya
+                // dan update attribute data-index nya.
+            }
+            
+            // Cara termudah dan aman untuk animasi di DOM (karena ukuran kecil 3x3):
+            // Assign ID saat pembuatan. Namun karena ini sederhana, render ulang bisa diterima,
+            // TAPI animasi akan hilang. Agar beranimasi, kita cari elemennya.
+            
+            // Iterasi elemen di DOM
+            Array.from(puzzleBoard.children).forEach(el => {
+                const tileValueStr = el.innerText;
+                const tileValue = parseInt(tileValueStr) - 1;
+                
+                // Cari posisi baru dari tileValue ini di array puzzleState
+                const newPos = puzzleState.indexOf(tileValue);
+                
+                // Update data-index dan css pos
+                el.setAttribute('data-index', newPos);
+                
+                const newRow = Math.floor(newPos / GRID_SIZE);
+                const newCol = newPos % GRID_SIZE;
+                
+                el.style.left = `${newCol * TILE_SIZE}px`;
+                el.style.top = `${newRow * TILE_SIZE}px`;
+            });
+        }
+
+        function checkWin() {
+            let isWin = true;
+            for (let i = 0; i < NUM_TILES; i++) {
+                if (puzzleState[i] !== solvedState[i]) {
+                    isWin = false;
+                    break;
+                }
+            }
+
+            if (isWin) {
+                // Tampilkan tile terakhir (tutup bolongnya)
+                const blankEl = document.querySelector('.tile-empty');
+                if(blankEl) {
+                    blankEl.style.backgroundImage = `url(${imageDataUrl})`;
+                    blankEl.style.backgroundPosition = `-${2 * TILE_SIZE}px -${2 * TILE_SIZE}px`;
+                    blankEl.classList.remove('tile-empty');
+                    blankEl.style.opacity = '1';
+                }
+                
+                uiWin.classList.remove('hidden');
+                uiWin.classList.add('flex');
+            }
+        }
+
+        // --- TOMBOL-TOMBOL NAVIGASI ---
+        btnRestart.addEventListener('click', () => {
+            initGame();
+        });
+
+        btnRephoto.addEventListener('click', () => {
+            uiGame.classList.add('hidden');
+            uiGame.classList.remove('flex');
+            uiStart.classList.remove('hidden');
+            cameraPreviewCanvas.classList.remove('hidden');
+        });
+
+        btnPlayAgain.addEventListener('click', () => {
+            uiWin.classList.add('hidden');
+            uiWin.classList.remove('flex');
+            initGame();
+        });
+
     </script>
 </body>
 </html>
