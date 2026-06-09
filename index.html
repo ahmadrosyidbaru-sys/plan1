@@ -1,574 +1,279 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Touchless Puzzle Wajah</title>
-    <!-- Tailwind CSS untuk Styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- MediaPipe untuk AI Hand Tracking -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1656422568/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils@0.6.1629159505/control_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1620248257/drawing_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Unduh Foto QR</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          screens: {
+            'xs': '375px',
+          }
+        }
+      }
+    }
+  </script>
 
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden; /* Mencegah scrolling */
-            background-color: #111827; /* Tailwind gray-900 */
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            user-select: none;
-        }
-
-        /* Video feed asli disembunyikan (hanya untuk proses AI) */
-        #video-input {
-            display: none;
-        }
-
-        /* Tile Puzzle */
-        .puzzle-tile {
-            position: absolute;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid #1f2937;
-            border-radius: 4px;
-            background-size: 300px 300px; /* Sesuai ukuran board */
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: transparent; /* Ubah ke rgba(255,255,255,0.5) jika ingin melihat nomor tile */
-        }
-
-        /* Efek hover untuk tombol (dipicu juga oleh kursor virtual) */
-        .touchless-btn {
-            transition: all 0.2s ease;
-        }
-        .touchless-btn:hover {
-            transform: scale(1.05);
-            background-color: #3b82f6;
-        }
-        .touchless-btn:active, .touchless-btn.active-pinch {
-            transform: scale(0.95);
-            background-color: #2563eb;
-        }
-
-        /* Tile Kosong */
-        .tile-empty {
-            opacity: 0;
-            pointer-events: none;
-        }
-    </style>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    /* Transisi halus untuk semua elemen saat ganti tema */
+    .theme-transition {
+      transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                  color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                  border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                  box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.3s ease;
+    }
+    
+    /* Mencegah scrollbar horizontal yang tidak disengaja */
+    html, body {
+      overflow-x: hidden;
+      height: 100%;
+    }
+  </style>
 </head>
-<body class="w-full h-screen relative flex flex-col items-center justify-center">
+<body class="theme-transition bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between p-4 sm:p-6 md:p-8 relative selection:bg-blue-500 selection:text-white">
 
-    <!-- Elemen Video untuk Kamera -->
-    <video id="video-input" autoplay playsinline></video>
+  <!-- Latar Belakang Dekoratif Abstrak -->
+  <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none opacity-40 dark:opacity-20">
+    <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-blue-400 blur-3xl"></div>
+    <div class="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-purple-400 blur-3xl"></div>
+  </div>
 
-    <!-- Canvas untuk Menampilkan Feed Kamera yang di-Mirror di Menu Utama -->
-    <canvas id="camera-preview" class="absolute inset-0 w-full h-full object-cover opacity-40 z-0 transform scale-x-[-1]"></canvas>
-
-    <!-- Canvas untuk Menggambar Rangka Tangan (Feedback Visual) -->
-    <canvas id="hand-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-40"></canvas>
-
-    <!-- Kursor Virtual (Titik Merah) -->
-    <div id="virtual-cursor" class="fixed top-0 left-0 w-8 h-8 bg-red-500 rounded-full z-50 pointer-events-none transform -translate-x-1/2 -translate-y-1/2 opacity-0 shadow-[0_0_15px_rgba(239,68,68,0.8)] transition-all duration-75">
-        <div id="cursor-inner" class="w-full h-full rounded-full border-2 border-white transform transition-transform duration-200"></div>
+  <!-- Header Atas (Tombol Tema & Identitas Mini) -->
+  <header class="w-full max-w-lg mx-auto flex justify-between items-center z-10 mb-2">
+    <div class="flex items-center space-x-2">
+      <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-md">
+        <i data-lucide="camera" class="w-4 h-4"></i>
+      </div>
+      <span class="font-bold tracking-wide text-xs sm:text-sm uppercase text-blue-600 dark:text-blue-400">Cloud Gallery</span>
     </div>
 
-    <!-- UI LAYER (Z-index diatas canvas kamera, dibawah cursor) -->
-    <div id="ui-layer" class="relative z-30 flex flex-col items-center justify-center w-full h-full">
-        
-        <!-- Layar Loading -->
-        <div id="loading-screen" class="flex flex-col items-center">
-            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"></div>
-            <h2 class="text-2xl font-bold text-center">Memuat Kamera & AI...</h2>
-            <p class="text-gray-400 mt-2 text-center max-w-md">Harap izinkan akses kamera. Pastikan Anda berada di tempat yang cukup terang.</p>
+    <!-- Tombol Ganti Tema -->
+    <button 
+      id="theme-toggle"
+      class="theme-transition p-3 rounded-xl shadow-md hover:shadow-lg hover:scale-105 bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:text-yellow-400 dark:hover:bg-slate-800 border border-slate-200/50 dark:border-slate-800"
+      aria-label="Toggle Theme"
+    >
+      <i data-lucide="moon" id="theme-icon-moon" class="w-5 h-5"></i>
+      <i data-lucide="sun" id="theme-icon-sun" class="w-5 h-5 hidden"></i>
+    </button>
+  </header>
+
+  <!-- Kontainer Utama (Card) -->
+  <main class="w-full flex-grow flex items-center justify-center my-auto py-4">
+    <div class="theme-transition max-w-sm sm:max-w-md w-full rounded-3xl shadow-xl hover:shadow-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+      
+      <!-- Bagian Atas Card -->
+      <div class="theme-transition p-5 sm:p-6 text-center bg-gradient-to-b from-blue-50 to-white dark:from-slate-900 dark:to-slate-900 border-b border-slate-100 dark:border-slate-800">
+        <div class="mx-auto bg-blue-600 text-white w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
+          <i data-lucide="download" class="w-7 h-7 sm:w-8 sm:h-8"></i>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Unduh Dokumentasi Foto</h1>
+        <p class="theme-transition text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 max-w-xs mx-auto">
+          Scan QR Code di bawah untuk masuk ke Google Drive dan mengunduh seluruh file foto.
+        </p>
+      </div>
+
+      <!-- Bagian QR & Tombol -->
+      <div class="p-6 sm:p-8 flex flex-col items-center">
+        <!-- Area QR Code Responsif -->
+        <div class="theme-transition p-4 rounded-2xl mb-6 sm:mb-8 shadow-md dark:shadow-none bg-slate-50 border border-slate-100 dark:bg-white dark:border-none transform hover:scale-[1.02] duration-300">
+          <img 
+            src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=https%3A%2F%2Fdrive.google.com%2Fdrive%2Ffolders%2F12J3cC_axt07ZzivdoYct4jnzCCJJi9WP%3Fusp%3Dsharing" 
+            alt="QR Code Google Drive" 
+            class="w-40 h-40 xs:w-44 xs:h-44 sm:w-52 sm:h-52 object-contain rounded-lg"
+          />
         </div>
 
-        <!-- Layar Mulai / Ambil Foto -->
-        <div id="start-screen" class="hidden flex-col items-center w-full max-w-md px-6">
-            <h1 class="text-4xl font-bold text-center mb-2 drop-shadow-lg">Puzzle Wajah <br><span class="text-blue-400">Touchless</span></h1>
-            <p class="text-gray-300 text-center mb-8 bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700">
-                Gunakan tangan Anda sebagai kursor.<br>Posisikan wajah Anda di tengah layar, arahkan kursor ke tombol di bawah, dan <b>Cubit (temukan ujung jempol & telunjuk)</b> untuk mengambil foto!
-            </p>
-            
-            <!-- Panduan kotak di tengah wajah -->
-            <div class="w-64 h-64 border-2 border-dashed border-yellow-400 rounded-lg mb-8 flex items-center justify-center relative bg-black bg-opacity-20 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
-                <span class="text-yellow-400 font-bold bg-black bg-opacity-50 px-2 py-1 rounded">Area Puzzle</span>
-            </div>
+        <!-- Tombol Aksi responsif -->
+        <div class="flex flex-col w-full space-y-3 sm:space-y-4">
+          <button 
+            id="btn-guide"
+            class="theme-transition flex items-center justify-center space-x-2.5 py-3 sm:py-3.5 px-4 rounded-xl font-semibold text-sm bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-white"
+          >
+            <i data-lucide="info" class="w-4.5 h-4.5"></i>
+            <span>Cara Scan & Download</span>
+          </button>
 
-            <button id="btn-capture" class="touchless-btn w-full py-4 bg-blue-600 text-white font-bold text-xl rounded-full shadow-lg border-2 border-blue-400 pointer-events-auto">
-                📸 Cubit Disini Untuk Foto
-            </button>
+          <a 
+            href="https://drive.google.com/drive/folders/12J3cC_axt07ZzivdoYct4jnzCCJJi9WP?usp=sharing"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center justify-center space-x-2.5 py-3 sm:py-3.5 px-4 rounded-xl font-semibold text-sm text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0"
+          >
+            <i data-lucide="external-link" class="w-4.5 h-4.5"></i>
+            <span>Buka Link Langsung</span>
+          </a>
         </div>
-
-        <!-- Layar Permainan (Puzzle) -->
-        <div id="game-screen" class="hidden flex-col items-center">
-            <h2 class="text-3xl font-bold mb-4">Susun Wajah Anda!</h2>
-            <p class="mb-4 text-gray-300 bg-gray-800 px-4 py-2 rounded-full text-sm">
-                Arahkan ke kotak di sebelah area kosong dan <b>Cubit</b> untuk menggeser.
-            </p>
-            
-            <!-- Papan Puzzle -->
-            <div id="puzzle-board" class="relative w-[300px] h-[300px] bg-gray-800 border-4 border-gray-600 rounded-lg shadow-2xl overflow-hidden mb-6 pointer-events-auto">
-                <!-- Tiles akan digenerate disini oleh JS -->
-            </div>
-
-            <div class="flex gap-4">
-                <button id="btn-restart" class="touchless-btn px-6 py-3 bg-red-600 text-white font-bold rounded-full shadow-lg pointer-events-auto">
-                    🔄 Ulangi
-                </button>
-                <button id="btn-rephoto" class="touchless-btn px-6 py-3 bg-gray-600 text-white font-bold rounded-full shadow-lg pointer-events-auto">
-                    📷 Foto Ulang
-                </button>
-            </div>
-        </div>
-
-        <!-- Layar Menang -->
-        <div id="win-screen" class="hidden flex-col items-center bg-green-900 bg-opacity-90 p-10 rounded-2xl border-4 border-green-500 shadow-2xl backdrop-blur-md text-center absolute z-50">
-            <h2 class="text-5xl font-bold text-green-300 mb-4 animate-bounce">LUAR BIASA! 🎉</h2>
-            <p class="text-xl mb-8">Anda berhasil menyusun wajah Anda tanpa menyentuh layar sama sekali!</p>
-            <button id="btn-play-again" class="touchless-btn px-8 py-4 bg-green-600 text-white font-bold text-xl rounded-full shadow-lg border-2 border-green-400 pointer-events-auto">
-                Main Lagi
-            </button>
-        </div>
-
+      </div>
     </div>
+  </main>
 
-    <!-- Data Audio Sederhana (Optional UI sound) -->
-    <audio id="sfx-click" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU" preload="auto"></audio>
+  <!-- Footer Bawah -->
+  <footer class="theme-transition text-center text-xs text-slate-400 dark:text-slate-600 py-2 z-10">
+    &copy; <span id="year"></span> Galeri Kenangan &bull; Dibuat dengan Cinta
+  </footer>
 
-    <script>
-        // --- KONFIGURASI DAN STATE ---
-        const GRID_SIZE = 3; // 3x3 Puzzle
-        const TILE_SIZE = 100; // 300px / 3
-        const NUM_TILES = GRID_SIZE * GRID_SIZE;
-        let puzzleState = []; // Status papan saat ini (array posisi)
-        let solvedState = []; // Status menang
-        let emptyIndex = NUM_TILES - 1; // Index 8 adalah tile kosong
-        let imageDataUrl = ''; // Menyimpan foto pengguna
+  <!-- Modal Panduan (Overlay Full Screen Responsif) -->
+  <div 
+    id="modal-guide" 
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md hidden transition-opacity duration-300 opacity-0"
+  >
+    <div class="theme-transition max-w-sm sm:max-w-md w-full rounded-3xl shadow-2xl overflow-hidden bg-white text-slate-800 dark:bg-slate-900 dark:text-white transform scale-95 transition-transform duration-300 border border-slate-100 dark:border-slate-800">
+      
+      <!-- Modal Header -->
+      <div class="theme-transition flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800">
+        <h2 class="text-base sm:text-lg font-bold flex items-center gap-2">
+          <i data-lucide="qr-code" class="text-blue-500 w-5 h-5"></i>
+          Panduan Unduh Foto
+        </h2>
+        <button 
+          id="btn-close-modal"
+          class="theme-transition p-1.5 rounded-full hover:bg-slate-100 text-slate-500 dark:hover:bg-slate-800 dark:text-slate-400"
+        >
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 sm:p-6 space-y-4sm:space-y-5">
+        <div class="flex gap-3.5 sm:gap-4 items-start">
+          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">1</div>
+          <div>
+            <h3 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Buka Kamera HP</h3>
+            <p class="theme-transition text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Buka aplikasi kamera bawaan di HP Anda, atau gunakan aplikasi pemindai QR.</p>
+          </div>
+        </div>
         
-        let isModelLoaded = false;
-        
-        // Touchless Logic State
-        let cursorX = window.innerWidth / 2;
-        let cursorY = window.innerHeight / 2;
-        let smoothCursorX = cursorX;
-        let smoothCursorY = cursorY;
-        let isPinching = false;
-        let wasPinching = false;
+        <div class="flex gap-3.5 sm:gap-4 items-start">
+          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">2</div>
+          <div>
+            <h3 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Arahkan ke Kode QR</h3>
+            <p class="theme-transition text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Arahkan lensa kamera HP Anda tepat ke arah gambar QR code di layar.</p>
+          </div>
+        </div>
 
-        // --- ELEMEN DOM ---
-        const videoElement = document.getElementById('video-input');
-        const cameraPreviewCanvas = document.getElementById('camera-preview');
-        const previewCtx = cameraPreviewCanvas.getContext('2d');
-        const handCanvas = document.getElementById('hand-canvas');
-        const handCtx = handCanvas.getContext('2d');
-        const cursorEl = document.getElementById('virtual-cursor');
-        const cursorInner = document.getElementById('cursor-inner');
-        
-        const uiLoading = document.getElementById('loading-screen');
-        const uiStart = document.getElementById('start-screen');
-        const uiGame = document.getElementById('game-screen');
-        const uiWin = document.getElementById('win-screen');
-        
-        const puzzleBoard = document.getElementById('puzzle-board');
-        const btnCapture = document.getElementById('btn-capture');
-        const btnRestart = document.getElementById('btn-restart');
-        const btnRephoto = document.getElementById('btn-rephoto');
-        const btnPlayAgain = document.getElementById('btn-play-again');
+        <div class="flex gap-3.5 sm:gap-4 items-start">
+          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">3</div>
+          <div>
+            <h3 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Ketuk Link & Unduh</h3>
+            <p class="theme-transition text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Ketuk link Google Drive yang terdeteksi, lalu pilih dan unduh foto favorit Anda.</p>
+          </div>
+        </div>
+      </div>
 
-        // --- INISIALISASI MEDIAPIPE HANDS ---
-        const hands = new Hands({locateFile: (file) => {
-            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${file}`;
-        }});
-        
-        hands.setOptions({
-            maxNumHands: 1, // Hanya deteksi 1 tangan untuk mempermudah
-            modelComplexity: 1,
-            minDetectionConfidence: 0.7,
-            minTrackingConfidence: 0.7
-        });
-        
-        hands.onResults(onHandResults);
+      <!-- Modal Footer -->
+      <div class="theme-transition p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
+        <button 
+          id="btn-understand"
+          class="w-full py-2.5 sm:py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors shadow-md"
+        >
+          Saya Mengerti
+        </button>
+      </div>
+    </div>
+  </div>
 
-        const camera = new Camera(videoElement, {
-            onFrame: async () => {
-                await hands.send({image: videoElement});
-                drawCameraPreview(); // Update preview layar penuh secara manual
-            },
-            width: 1280,
-            height: 720,
-            facingMode: "user" // Gunakan kamera depan
-        });
-        
-        camera.start().catch(err => {
-            alert("Gagal mengakses kamera. Pastikan memberikan izin kamera di browser Anda.");
-            console.error(err);
-        });
+  <script>
+    // Inisialisasi ikon Lucide
+    lucide.createIcons();
 
-        // Resize handler untuk canvas
-        function resizeCanvas() {
-            cameraPreviewCanvas.width = window.innerWidth;
-            cameraPreviewCanvas.height = window.innerHeight;
-            handCanvas.width = window.innerWidth;
-            handCanvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+    // Set tahun secara dinamis
+    document.getElementById('year').textContent = new Date().getFullYear();
 
-        function drawCameraPreview() {
-            if (uiStart.classList.contains('hidden')) return; // Hanya gambar jika di menu utama
-            
-            // Gambar video feed ke canvas background (supaya bisa di manipulasi ukurannya)
-            const vw = videoElement.videoWidth;
-            const vh = videoElement.videoHeight;
-            if(!vw || !vh) return;
+    // Seleksi Elemen DOM
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const moonIcon = document.getElementById('theme-icon-moon');
+    const sunIcon = document.getElementById('theme-icon-sun');
+    const modalGuide = document.getElementById('modal-guide');
+    const btnGuide = document.getElementById('btn-guide');
+    const btnCloseModal = document.getElementById('btn-close-modal');
+    const btnUnderstand = document.getElementById('btn-understand');
 
-            const cw = cameraPreviewCanvas.width;
-            const ch = cameraPreviewCanvas.height;
-            
-            // Perhitungan cover (mirip background-size: cover)
-            const scale = Math.max(cw / vw, ch / vh);
-            const w = vw * scale;
-            const h = vh * scale;
-            const x = (cw - w) / 2;
-            const y = (ch - h) / 2;
+    // Cek preferensi tema bawaan sistem atau default ke Light
+    let isDarkMode = localStorage.getItem('theme') === 'dark' || 
+      (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
-            previewCtx.clearRect(0, 0, cw, ch);
-            previewCtx.drawImage(videoElement, x, y, w, h);
-        }
+    // Fungsi Pengaturan Tema Awal
+    function initTheme() {
+      if (isDarkMode) {
+        document.documentElement.classList.add('dark');
+        moonIcon.classList.add('hidden');
+        sunIcon.classList.remove('hidden');
+      } else {
+        document.documentElement.classList.remove('dark');
+        sunIcon.classList.add('hidden');
+        moonIcon.classList.remove('hidden');
+      }
+    }
+    initTheme();
 
-        // --- LOGIKA UTAMA TRACKING TANGAN ---
-        function onHandResults(results) {
-            // Sembunyikan loading jika ini adalah frame pertama yang sukses diproses
-            if (!isModelLoaded) {
-                isModelLoaded = true;
-                uiLoading.classList.add('hidden');
-                uiStart.classList.remove('hidden');
-            }
+    // Fungsi Ganti Tema
+    function toggleTheme() {
+      isDarkMode = !isDarkMode;
+      if (isDarkMode) {
+        document.documentElement.classList.add('dark');
+        moonIcon.classList.add('hidden');
+        sunIcon.classList.remove('hidden');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        sunIcon.classList.add('hidden');
+        moonIcon.classList.remove('hidden');
+        localStorage.setItem('theme', 'light');
+      }
+    }
 
-            // Bersihkan canvas rangka
-            handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
+    // Fungsi Buka Modal (Dengan Animasi Fade & Scale)
+    function openModal() {
+      modalGuide.classList.remove('hidden');
+      // Berikan jeda mikro agar transisi CSS bekerja
+      setTimeout(() => {
+        modalGuide.classList.remove('opacity-0');
+        modalGuide.querySelector('div').classList.remove('scale-95');
+        modalGuide.querySelector('div').classList.add('scale-100');
+      }, 10);
+    }
 
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                const landmarks = results.multiHandLandmarks[0];
-                
-                // --- Gambar rangka tangan (Visual Feedback) ---
-                drawConnectors(handCtx, landmarks, HAND_CONNECTIONS, {color: 'rgba(255, 255, 255, 0.4)', lineWidth: 3});
-                drawLandmarks(handCtx, landmarks, {color: 'rgba(59, 130, 246, 0.6)', lineWidth: 1, radius: 4});
+    // Fungsi Tutup Modal (Dengan Animasi Out)
+    function closeModal() {
+      modalGuide.classList.add('opacity-0');
+      modalGuide.querySelector('div').classList.remove('scale-100');
+      modalGuide.querySelector('div').classList.add('scale-95');
+      // Sembunyikan setelah transisi selesai (300ms)
+      setTimeout(() => {
+        modalGuide.classList.add('hidden');
+      }, 300);
+    }
 
-                // --- Ambil Koordinat ---
-                const indexFinger = landmarks[8]; // Ujung telunjuk
-                const thumbFinger = landmarks[4]; // Ujung jempol
+    // Event Listeners
+    themeToggleBtn.addEventListener('click', toggleTheme);
+    btnGuide.addEventListener('click', openModal);
+    btnCloseModal.addEventListener('click', closeModal);
+    btnUnderstand.addEventListener('click', closeModal);
 
-                // Map koordinat ke layar (Catatan: X di-mirror (1 - x) karena ini kamera depan)
-                const targetX = (1 - indexFinger.x) * window.innerWidth;
-                const targetY = indexFinger.y * window.innerHeight;
+    // Menutup modal jika pengguna mengklik area luar modal (backdrop)
+    modalGuide.addEventListener('click', (e) => {
+      if (e.target === modalGuide) {
+        closeModal();
+      }
+    });
 
-                // Hitung Jarak untuk Pinch (Cubit)
-                // Menggunakan jarak Euclidean relatif (tergantung rasio layar, 0.05 biasanya ideal)
-                const dist = Math.hypot(thumbFinger.x - indexFinger.x, thumbFinger.y - indexFinger.y);
-                const pinchThreshold = 0.06;
-                isPinching = dist < pinchThreshold;
-
-                // --- Smoothing Pergerakan Kursor (Linear Interpolation / EMA) ---
-                smoothCursorX += (targetX - smoothCursorX) * 0.4;
-                smoothCursorY += (targetY - smoothCursorY) * 0.4;
-
-                // Update posisi elemen kursor DOM
-                cursorEl.style.left = `${smoothCursorX}px`;
-                cursorEl.style.top = `${smoothCursorY}px`;
-                cursorEl.style.opacity = '1';
-
-                // --- Logika "Klik" via Cubit ---
-                if (isPinching) {
-                    cursorInner.classList.add('scale-50', 'bg-blue-400');
-                    cursorEl.classList.add('scale-75');
-                } else {
-                    cursorInner.classList.remove('scale-50', 'bg-blue-400');
-                    cursorEl.classList.remove('scale-75');
-                }
-
-                // Rising Edge Detection: Saat tepat mulai mencubit
-                if (isPinching && !wasPinching) {
-                    triggerTouchlessClick(smoothCursorX, smoothCursorY);
-                }
-
-                wasPinching = isPinching;
-
-            } else {
-                // Tangan tidak terdeteksi, sembunyikan kursor
-                cursorEl.style.opacity = '0';
-                isPinching = false;
-                wasPinching = false;
-            }
-        }
-
-        // Mensimulasikan klik pada elemen HTML di bawah kursor virtual
-        function triggerTouchlessClick(x, y) {
-            // Sembunyikan kursor sebentar agar tidak mendeteksi dirinya sendiri
-            const oldDisplay = cursorEl.style.display;
-            cursorEl.style.display = 'none';
-
-            // Dapatkan elemen paling atas di koordinat (x,y)
-            const elem = document.elementFromPoint(x, y);
-
-            // Tampilkan kursor kembali
-            cursorEl.style.display = oldDisplay;
-
-            if (elem) {
-                // Tambahkan efek visual pada tombol
-                if(elem.classList.contains('touchless-btn')) {
-                    elem.classList.add('active-pinch');
-                    setTimeout(() => elem.classList.remove('active-pinch'), 150);
-                }
-
-                // Jika itu bagian dari puzzle, panggil fungsinya
-                if (elem.classList.contains('puzzle-tile')) {
-                    const tileIndex = parseInt(elem.getAttribute('data-index'));
-                    handleTileClick(tileIndex);
-                } 
-                // Jika tombol HTML biasa, simulasikan event 'click'
-                else {
-                    elem.click();
-                }
-            }
-        }
-
-        // --- LOGIKA APLIKASI / GAME ---
-
-        // 1. Ambil Foto
-        btnCapture.addEventListener('click', () => {
-            takePhoto();
-        });
-
-        function takePhoto() {
-            // Buat canvas sementara untuk mencrop bagian tengah video
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = 300; 
-            tempCanvas.height = 300;
-            const ctx = tempCanvas.getContext('2d');
-
-            // Kita harus mencrop video menjadi rasio kotak 1:1 di tengah
-            const vw = videoElement.videoWidth;
-            const vh = videoElement.videoHeight;
-            const size = Math.min(vw, vh); // Ambil ukuran terkecil untuk membuat kotak
-            const startX = (vw - size) / 2;
-            const startY = (vh - size) / 2;
-
-            // Karena video asli di web biasanya tidak di mirror, namun kita tampilkan mirror, 
-            // kita harus flip context agar hasil foto sesuai dengan apa yang user lihat di layar
-            ctx.translate(300, 0);
-            ctx.scale(-1, 1);
-
-            // Draw ke canvas kotak (300x300)
-            ctx.drawImage(videoElement, startX, startY, size, size, 0, 0, 300, 300);
-
-            imageDataUrl = tempCanvas.toDataURL('image/png');
-            
-            // Pindah UI
-            uiStart.classList.add('hidden');
-            cameraPreviewCanvas.classList.add('hidden');
-            uiGame.classList.remove('hidden');
-            uiGame.classList.add('flex');
-
-            initGame();
-        }
-
-        // 2. Inisialisasi Puzzle
-        function initGame() {
-            puzzleState = [];
-            solvedState = [];
-            puzzleBoard.innerHTML = '';
-            
-            // Setup data awal (0 sampai 8)
-            for (let i = 0; i < NUM_TILES; i++) {
-                puzzleState.push(i);
-                solvedState.push(i);
-            }
-            
-            // Shuffle (Acak dengan simulasi pergerakan agar pasti bisa diselesaikan)
-            shuffleBoard();
-            
-            // Render UI
-            renderBoard();
-        }
-
-        function shuffleBoard() {
-            let blankPos = NUM_TILES - 1;
-            
-            // Lakukan 100 gerakan acak yang valid
-            for (let i = 0; i < 150; i++) {
-                const neighbors = getNeighbors(blankPos);
-                const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
-                
-                // Swap posisi array
-                const temp = puzzleState[blankPos];
-                puzzleState[blankPos] = puzzleState[randomNeighbor];
-                puzzleState[randomNeighbor] = temp;
-                
-                blankPos = randomNeighbor;
-            }
-        }
-
-        function getNeighbors(index) {
-            const neighbors = [];
-            const row = Math.floor(index / GRID_SIZE);
-            const col = index % GRID_SIZE;
-
-            if (row > 0) neighbors.push(index - GRID_SIZE); // Atas
-            if (row < GRID_SIZE - 1) neighbors.push(index + GRID_SIZE); // Bawah
-            if (col > 0) neighbors.push(index - 1); // Kiri
-            if (col < GRID_SIZE - 1) neighbors.push(index + 1); // Kanan
-
-            return neighbors;
-        }
-
-        // 3. Render Papan Puzzle ke DOM
-        function renderBoard() {
-            puzzleBoard.innerHTML = '';
-            
-            for (let i = 0; i < NUM_TILES; i++) {
-                const tileValue = puzzleState[i];
-                
-                const tileEl = document.createElement('div');
-                tileEl.classList.add('puzzle-tile');
-                tileEl.setAttribute('data-index', i); // Index posisinya di papan saat ini
-                tileEl.innerText = tileValue + 1; // Untuk debug
-                
-                // Hitung posisi di grid layar (dalam pixel)
-                const row = Math.floor(i / GRID_SIZE);
-                const col = i % GRID_SIZE;
-                tileEl.style.left = `${col * TILE_SIZE}px`;
-                tileEl.style.top = `${row * TILE_SIZE}px`;
-                tileEl.style.width = `${TILE_SIZE}px`;
-                tileEl.style.height = `${TILE_SIZE}px`;
-
-                if (tileValue === NUM_TILES - 1) {
-                    // Ini adalah tile kosong (index 8 asli)
-                    tileEl.classList.add('tile-empty');
-                } else {
-                    // Beri gambar latar belakang (foto crop)
-                    tileEl.style.backgroundImage = `url(${imageDataUrl})`;
-                    
-                    // Hitung potongan gambar yang pas untuk tile ini berdasarkan nilai aslinya
-                    const originalRow = Math.floor(tileValue / GRID_SIZE);
-                    const originalCol = tileValue % GRID_SIZE;
-                    
-                    // Geser background supaya menampilkan potongan yang benar
-                    tileEl.style.backgroundPosition = `-${originalCol * TILE_SIZE}px -${originalRow * TILE_SIZE}px`;
-                }
-
-                puzzleBoard.appendChild(tileEl);
-            }
-        }
-
-        // 4. Logika Pergerakan (Geser)
-        function handleTileClick(boardIndex) {
-            // Cari index dari kotak kosong (bernilai 8)
-            const blankIndex = puzzleState.indexOf(NUM_TILES - 1);
-            
-            // Cek apakah klik bertetangga dengan kotak kosong
-            const neighbors = getNeighbors(blankIndex);
-            
-            if (neighbors.includes(boardIndex)) {
-                // Geser (Swap array)
-                const temp = puzzleState[boardIndex];
-                puzzleState[boardIndex] = puzzleState[blankIndex];
-                puzzleState[blankIndex] = temp;
-                
-                // Update DOM (Animasi geser)
-                updateDOMPositions();
-                
-                // Cek Menang (Beri delay agar animasi selesai dulu)
-                setTimeout(checkWin, 350);
-            }
-        }
-
-        function updateDOMPositions() {
-            // Daripada re-render ulang seluruh elemen yang memutus animasi CSS,
-            // Kita ubah posisi CSS (left, top) dari elemen yang sudah ada.
-            const tiles = puzzleBoard.children;
-            
-            for (let i = 0; i < NUM_TILES; i++) {
-                const currentPos = i; // Posisi di grid
-                const tileValue = puzzleState[i]; // Identitas tile
-                
-                // Cari elemen HTML yang mewakili tileValue ini
-                // Agak tricky, tapi kita bisa update posisi left dan top nya
-                // dan update attribute data-index nya.
-            }
-            
-            // Cara termudah dan aman untuk animasi di DOM (karena ukuran kecil 3x3):
-            // Assign ID saat pembuatan. Namun karena ini sederhana, render ulang bisa diterima,
-            // TAPI animasi akan hilang. Agar beranimasi, kita cari elemennya.
-            
-            // Iterasi elemen di DOM
-            Array.from(puzzleBoard.children).forEach(el => {
-                const tileValueStr = el.innerText;
-                const tileValue = parseInt(tileValueStr) - 1;
-                
-                // Cari posisi baru dari tileValue ini di array puzzleState
-                const newPos = puzzleState.indexOf(tileValue);
-                
-                // Update data-index dan css pos
-                el.setAttribute('data-index', newPos);
-                
-                const newRow = Math.floor(newPos / GRID_SIZE);
-                const newCol = newPos % GRID_SIZE;
-                
-                el.style.left = `${newCol * TILE_SIZE}px`;
-                el.style.top = `${newRow * TILE_SIZE}px`;
-            });
-        }
-
-        function checkWin() {
-            let isWin = true;
-            for (let i = 0; i < NUM_TILES; i++) {
-                if (puzzleState[i] !== solvedState[i]) {
-                    isWin = false;
-                    break;
-                }
-            }
-
-            if (isWin) {
-                // Tampilkan tile terakhir (tutup bolongnya)
-                const blankEl = document.querySelector('.tile-empty');
-                if(blankEl) {
-                    blankEl.style.backgroundImage = `url(${imageDataUrl})`;
-                    blankEl.style.backgroundPosition = `-${2 * TILE_SIZE}px -${2 * TILE_SIZE}px`;
-                    blankEl.classList.remove('tile-empty');
-                    blankEl.style.opacity = '1';
-                }
-                
-                uiWin.classList.remove('hidden');
-                uiWin.classList.add('flex');
-            }
-        }
-
-        // --- TOMBOL-TOMBOL NAVIGASI ---
-        btnRestart.addEventListener('click', () => {
-            initGame();
-        });
-
-        btnRephoto.addEventListener('click', () => {
-            uiGame.classList.add('hidden');
-            uiGame.classList.remove('flex');
-            uiStart.classList.remove('hidden');
-            cameraPreviewCanvas.classList.remove('hidden');
-        });
-
-        btnPlayAgain.addEventListener('click', () => {
-            uiWin.classList.add('hidden');
-            uiWin.classList.remove('flex');
-            initGame();
-        });
-
-    </script>
+    // Menutup modal dengan tombol Escape di keyboard
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modalGuide.classList.contains('hidden')) {
+        closeModal();
+      }
+    });
+  </script>
 </body>
 </html>
