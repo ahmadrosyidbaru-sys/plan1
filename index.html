@@ -1,279 +1,452 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Unduh Foto QR</title>
-  
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          screens: {
-            'xs': '375px',
+  <!DOCTYPE html>
+  <html lang="id" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Wedding of Taruna & Prameswari - Galeri Foto</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            screens: {
+              'xs': '375px',
+            },
+            colors: {
+              wedding: {
+                gold: '#D4AF37',
+                rose: '#f43f5e',
+              }
+            }
           }
         }
       }
-    }
-  </script>
+    </script>
 
-  <!-- Lucide Icons CDN -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-  
-  <style>
-    /* Transisi halus untuk semua elemen saat ganti tema */
-    .theme-transition {
-      transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                  color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                  border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                  box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                  transform 0.3s ease;
-    }
+    <!-- Google Fonts: Playfair Display & Great Vibes untuk Nuansa Pernikahan -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Pustaka QR Code Generator (QRious) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     
-    /* Mencegah scrollbar horizontal yang tidak disengaja */
-    html, body {
-      overflow-x: hidden;
-      height: 100%;
-    }
-  </style>
-</head>
-<body class="theme-transition bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between p-4 sm:p-6 md:p-8 relative selection:bg-blue-500 selection:text-white">
+    <style>
+      /* Font custom ala wedding */
+      .font-wedding {
+        font-family: 'Great Vibes', cursive;
+      }
+      .font-serif-wedding {
+        font-family: 'Playfair Display', serif;
+      }
+      body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
 
-  <!-- Latar Belakang Dekoratif Abstrak -->
-  <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none opacity-40 dark:opacity-20">
-    <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-blue-400 blur-3xl"></div>
-    <div class="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-purple-400 blur-3xl"></div>
-  </div>
+      /* Transisi halus untuk semua elemen saat ganti tema */
+      .theme-transition {
+        transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                    color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                    border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                    box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                    transform 0.3s ease;
+      }
+      
+      /* Mencegah scrollbar horizontal namun mengizinkan scroll vertikal yang mulus */
+      html, body {
+        overflow-x: hidden;
+        min-height: 100vh;
+      }
 
-  <!-- Header Atas (Tombol Tema & Identitas Mini) -->
-  <header class="w-full max-w-lg mx-auto flex justify-between items-center z-10 mb-2">
-    <div class="flex items-center space-x-2">
-      <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-md">
-        <i data-lucide="camera" class="w-4 h-4"></i>
-      </div>
-      <span class="font-bold tracking-wide text-xs sm:text-sm uppercase text-blue-600 dark:text-blue-400">Cloud Gallery</span>
+      /* Kustomisasi scrollbar halus untuk elemen galeri */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(244, 63, 94, 0.2);
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(244, 63, 94, 0.4);
+      }
+    </style>
+  </head>
+  <body class="theme-transition bg-gradient-to-br from-rose-50/40 via-white to-amber-50/20 text-slate-800 dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:text-slate-100 flex flex-col items-center justify-start p-4 sm:p-6 md:p-8 relative selection:bg-rose-400 selection:text-white">
+
+    <!-- Latar Belakang Dekoratif Abstrak (Nuansa Hangat/Romantis) -->
+    <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none opacity-60 dark:opacity-20">
+      <div class="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full bg-rose-200/40 blur-[100px] dark:bg-rose-900/10"></div>
+      <div class="absolute bottom-20 right-1/4 w-[600px] h-[600px] rounded-full bg-amber-100/40 blur-[120px] dark:bg-purple-900/10"></div>
     </div>
 
-    <!-- Tombol Ganti Tema -->
-    <button 
-      id="theme-toggle"
-      class="theme-transition p-3 rounded-xl shadow-md hover:shadow-lg hover:scale-105 bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:text-yellow-400 dark:hover:bg-slate-800 border border-slate-200/50 dark:border-slate-800"
-      aria-label="Toggle Theme"
-    >
-      <i data-lucide="moon" id="theme-icon-moon" class="w-5 h-5"></i>
-      <i data-lucide="sun" id="theme-icon-sun" class="w-5 h-5 hidden"></i>
-    </button>
-  </header>
-
-  <!-- Kontainer Utama (Card) -->
-  <main class="w-full flex-grow flex items-center justify-center my-auto py-4">
-    <div class="theme-transition max-w-sm sm:max-w-md w-full rounded-3xl shadow-xl hover:shadow-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-      
-      <!-- Bagian Atas Card -->
-      <div class="theme-transition p-5 sm:p-6 text-center bg-gradient-to-b from-blue-50 to-white dark:from-slate-900 dark:to-slate-900 border-b border-slate-100 dark:border-slate-800">
-        <div class="mx-auto bg-blue-600 text-white w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
-          <i data-lucide="download" class="w-7 h-7 sm:w-8 sm:h-8"></i>
+    <!-- Header Atas (Tombol Tema & Identitas Mini) -->
+    <header class="w-full max-w-4xl flex justify-between items-center z-10 mb-6 sm:mb-8">
+      <div class="flex items-center space-x-2">
+        <div class="w-9 h-9 rounded-full bg-rose-500 flex items-center justify-center text-white shadow-lg shadow-rose-500/20 dark:shadow-none">
+          <i data-lucide="heart" class="w-4.5 h-4.5 fill-white"></i>
         </div>
-        <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Unduh Dokumentasi Foto</h1>
-        <p class="theme-transition text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 max-w-xs mx-auto">
-          Scan QR Code di bawah untuk masuk ke Google Drive dan mengunduh seluruh file foto.
-        </p>
+        <span class="font-bold tracking-widest text-[10px] sm:text-xs uppercase text-rose-600 dark:text-rose-400">Wedding Gallery</span>
       </div>
 
-      <!-- Bagian QR & Tombol -->
-      <div class="p-6 sm:p-8 flex flex-col items-center">
-        <!-- Area QR Code Responsif -->
-        <div class="theme-transition p-4 rounded-2xl mb-6 sm:mb-8 shadow-md dark:shadow-none bg-slate-50 border border-slate-100 dark:bg-white dark:border-none transform hover:scale-[1.02] duration-300">
-          <img 
-            src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=https%3A%2F%2Fdrive.google.com%2Fdrive%2Ffolders%2F12J3cC_axt07ZzivdoYct4jnzCCJJi9WP%3Fusp%3Dsharing" 
-            alt="QR Code Google Drive" 
-            class="w-40 h-40 xs:w-44 xs:h-44 sm:w-52 sm:h-52 object-contain rounded-lg"
-          />
+      <!-- Tombol Ganti Tema -->
+      <button 
+        id="theme-toggle"
+        class="theme-transition p-3 rounded-xl shadow-md hover:shadow-lg hover:scale-105 bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:text-yellow-400 dark:hover:bg-slate-800 border border-slate-200/50 dark:border-slate-800"
+        aria-label="Toggle Theme"
+      >
+        <i data-lucide="moon" id="theme-icon-moon" class="w-5 h-5"></i>
+        <i data-lucide="sun" id="theme-icon-sun" class="w-5 h-5 hidden"></i>
+      </button>
+    </header>
+
+    <!-- Kontainer Utama (Card) -->
+    <main class="w-full max-w-4xl z-10 flex-grow mb-8">
+      <div class="theme-transition w-full rounded-3xl shadow-xl hover:shadow-2xl overflow-hidden bg-white/80 backdrop-blur-md dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800/80">
+        
+        <!-- Bagian Atas Card (Tipografi Wedding) -->
+        <div class="theme-transition p-8 sm:p-12 text-center bg-gradient-to-b from-rose-50/30 to-transparent dark:from-slate-900/40 border-b border-slate-100 dark:border-slate-800">
+          
+          <!-- Tulisan Pembuka Kecil -->
+          <p class="text-[10px] sm:text-xs font-semibold tracking-widest text-rose-500 uppercase mb-3">
+            The Wedding of
+          </p>
+
+          <!-- Nama Mempelai dengan Font Kaligrafi & Serif -->
+          <h1 class="text-4xl sm:text-5xl md:text-6xl font-serif-wedding font-normal tracking-wide text-slate-900 dark:text-white mb-2 leading-tight">
+            Taruna <span class="font-wedding text-rose-500 text-5xl sm:text-6xl md:text-7xl inline-block mx-1 transform -rotate-6">&amp; Prameswari</span>
+          </h1>
+
+          <!-- Pembatas Estetik -->
+          <div class="flex items-center justify-center gap-3 my-5">
+            <div class="h-[1px] w-12 bg-rose-200 dark:bg-slate-700"></div>
+            <i data-lucide="heart" class="w-4 h-4 text-rose-400 fill-rose-400 animate-pulse"></i>
+            <div class="h-[1px] w-12 bg-rose-200 dark:bg-slate-700"></div>
+          </div>
+
+          <!-- Tanggal / Keterangan Tambahan -->
+          <p class="theme-transition text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+            Momen Indah &bull; 10 Juni 2026
+          </p>
         </div>
 
-        <!-- Tombol Aksi responsif -->
-        <div class="flex flex-col w-full space-y-3 sm:space-y-4">
-          <button 
-            id="btn-guide"
-            class="theme-transition flex items-center justify-center space-x-2.5 py-3 sm:py-3.5 px-4 rounded-xl font-semibold text-sm bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-white"
-          >
-            <i data-lucide="info" class="w-4.5 h-4.5"></i>
-            <span>Cara Scan & Download</span>
-          </button>
+        <!-- Bagian Galeri & Tombol -->
+        <div class="p-4 sm:p-8 flex flex-col items-center">
+          
+          <!-- Indikator Status & Navigasi di Atas Iframe -->
+          <div class="w-full max-w-[460px] flex justify-between items-center px-2 mb-3">
+            <span class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+              <span class="font-medium">Live Gallery</span>
+            </span>
+            <span class="flex items-center gap-1 text-[11px] font-medium text-rose-500 bg-rose-50 dark:bg-rose-950/40 dark:text-rose-400 px-2 py-0.5 rounded-full">
+              <i data-lucide="chevrons-up-down" class="w-3.5 h-3.5"></i> Scroll Kebawah
+            </span>
+          </div>
 
-          <a 
-            href="https://drive.google.com/drive/folders/12J3cC_axt07ZzivdoYct4jnzCCJJi9WP?usp=sharing"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="flex items-center justify-center space-x-2.5 py-3 sm:py-3.5 px-4 rounded-xl font-semibold text-sm text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0"
+          <!-- Area Iframe Google Drive Responsif (Dibatasi lebarnya agar merender 1 kolom vertikal yang lebar dan besar) -->
+          <div class="w-full max-w-[460px] h-[60vh] sm:h-[68vh] rounded-2xl mb-8 shadow-lg bg-slate-50 border border-slate-200/60 dark:bg-slate-850 dark:border-slate-850 overflow-hidden relative group">
+            <!-- Loading Indicator -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 pointer-events-none">
+              <i data-lucide="loader" class="w-8 h-8 animate-spin text-rose-500 mb-2"></i>
+              <span class="text-sm font-medium">Memuat Galeri Foto...</span>
+            </div>
+            <!-- Google Drive Embed -->
+            <iframe 
+              src="https://drive.google.com/embeddedfolderview?id=12J3cC_axt07ZzivdoYct4jnzCCJJi9WP#grid" 
+              class="w-full h-full relative z-10 bg-white dark:bg-slate-900"
+              style="border: none;"
+              allowfullscreen>
+            </iframe>
+          </div>
+
+          <!-- Tombol Aksi responsif -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 w-full gap-3.5 sm:gap-4">
+            <button 
+              id="btn-guide"
+              class="theme-transition flex items-center justify-center space-x-2 py-3.5 px-4 rounded-2xl font-semibold text-sm bg-slate-100/70 hover:bg-rose-50 hover:text-rose-600 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-white border border-transparent hover:border-rose-100 dark:hover:border-slate-700"
+            >
+              <i data-lucide="info" class="w-4.5 h-4.5"></i>
+              <span>Cara Download</span>
+            </button>
+
+            <button 
+              id="btn-qrcode"
+              class="theme-transition flex items-center justify-center space-x-2 py-3.5 px-4 rounded-2xl font-semibold text-sm bg-amber-50 hover:bg-amber-100/80 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400 dark:hover:bg-amber-950/40 border border-amber-200/50 dark:border-amber-900/30"
+            >
+              <i data-lucide="qr-code" class="w-4.5 h-4.5"></i>
+              <span>Bagikan QR Code</span>
+            </button>
+
+            <a 
+              href="https://drive.google.com/drive/folders/12J3cC_axt07ZzivdoYct4jnzCCJJi9WP?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="theme-transition flex items-center justify-center space-x-2 py-3.5 px-4 rounded-2xl font-semibold text-sm text-white bg-rose-500 hover:bg-rose-600 shadow-md hover:shadow-lg hover:shadow-rose-500/20 transform hover:-translate-y-0.5 active:translate-y-0"
+            >
+              <i data-lucide="external-link" class="w-4.5 h-4.5"></i>
+              <span>Buka Google Drive</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer Bawah -->
+    <footer class="theme-transition text-center text-xs text-slate-400 dark:text-slate-600 py-4 w-full border-t border-slate-100 dark:border-slate-900/60 z-10 mt-auto">
+      &copy; <span id="year"></span> Taruna &amp; Prameswari &bull; Semua Hak Cipta Dilindungi
+    </footer>
+
+    <!-- Modal Panduan (Overlay Full Screen Responsif) -->
+    <div 
+      id="modal-guide" 
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md hidden transition-opacity duration-300 opacity-0"
+    >
+      <div class="theme-transition max-w-sm sm:max-w-md w-full rounded-3xl shadow-2xl overflow-hidden bg-white text-slate-800 dark:bg-slate-900 dark:text-white transform scale-95 transition-transform duration-300 border border-slate-100 dark:border-slate-800">
+        
+        <!-- Modal Header -->
+        <div class="theme-transition flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800">
+          <h2 class="text-base sm:text-lg font-bold flex items-center gap-2">
+            <i data-lucide="info" class="text-rose-500 w-5 h-5"></i>
+            Panduan Unduh Foto
+          </h2>
+          <button 
+            id="btn-close-modal"
+            class="theme-transition p-1.5 rounded-full hover:bg-slate-100 text-slate-500 dark:hover:bg-slate-800 dark:text-slate-400"
           >
-            <i data-lucide="external-link" class="w-4.5 h-4.5"></i>
-            <span>Buka Link Langsung</span>
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-5 sm:p-6 space-y-4 sm:space-y-5">
+          <div class="flex gap-3.5 sm:gap-4 items-start">
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">1</div>
+            <div>
+              <h3 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Cari Foto</h3>
+              <p class="theme-transition text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Gulir (scroll) kotak galeri di layar untuk melihat-lihat seluruh koleksi foto acara.</p>
+            </div>
+          </div>
+          
+          <div class="flex gap-3.5 sm:gap-4 items-start">
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">2</div>
+            <div>
+              <h3 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Buka Foto</h3>
+              <p class="theme-transition text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Ketuk (klik) dua kali pada foto pilihan Anda untuk melihatnya dalam ukuran penuh yang tajam.</p>
+            </div>
+          </div>
+
+          <div class="flex gap-3.5 sm:gap-4 items-start">
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">3</div>
+            <div>
+              <h3 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Unduh ke Perangkat</h3>
+              <p class="theme-transition text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Setelah terbuka, ketuk ikon panah ke bawah (Download) di bagian atas layar untuk menyimpannya.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="theme-transition p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
+          <button 
+            id="btn-understand"
+            class="w-full py-2.5 sm:py-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold text-sm transition-colors shadow-md"
+          >
+            Saya Mengerti
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal QR Code (Akses Galeri & Bagikan) -->
+    <div 
+      id="modal-qrcode" 
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md hidden transition-opacity duration-300 opacity-0"
+    >
+      <div class="theme-transition max-w-sm sm:max-w-md w-full rounded-3xl shadow-2xl overflow-hidden bg-white text-slate-800 dark:bg-slate-900 dark:text-white transform scale-95 transition-transform duration-300 border border-slate-100 dark:border-slate-800">
+        
+        <!-- Modal Header -->
+        <div class="theme-transition flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800">
+          <h2 class="text-base sm:text-lg font-bold flex items-center gap-2">
+            <i data-lucide="qr-code" class="text-amber-500 w-5 h-5"></i>
+            Bagikan Galeri Foto
+          </h2>
+          <button 
+            id="btn-close-qrcode"
+            class="theme-transition p-1.5 rounded-full hover:bg-slate-100 text-slate-500 dark:hover:bg-slate-800 dark:text-slate-400"
+          >
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 flex flex-col items-center text-center space-y-5">
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+            Tunjukkan QR Code ini kepada keluarga atau tamu undangan agar mereka dapat dengan mudah memindai dan mengakses galeri foto pernikahan secara langsung.
+          </p>
+
+          <!-- Wadah QR Code Canvas Dinamis (Terhubung ke Google Drive) -->
+          <a 
+            href="https://drive.google.com/drive/folders/12J3cC_axt07ZzivdoYct4jnzCCJJi9WP?usp=sharing" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            class="p-5 bg-white rounded-3xl shadow-lg border border-slate-100/80 dark:border-slate-800 flex flex-col items-center justify-center group hover:scale-[1.03] hover:shadow-xl transition-all duration-300"
+            title="Buka langsung di Google Drive"
+          >
+            <div class="bg-slate-50 p-3 rounded-2xl">
+              <canvas id="qr-code-canvas" class="w-48 h-48"></canvas>
+            </div>
+            <span class="text-xs font-semibold text-slate-400 mt-3.5 flex items-center gap-1.5 group-hover:text-rose-500 dark:group-hover:text-rose-400 transition-colors">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Ketuk untuk Buka di Ponsel
+            </span>
           </a>
         </div>
+
+        <!-- Modal Footer -->
+        <div class="theme-transition p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
+          <button 
+            id="btn-understand-qrcode"
+            class="w-full py-2.5 sm:py-3 rounded-xl bg-amber-500 hover:bg-amber-650 text-white font-semibold text-sm transition-colors shadow-md"
+          >
+            Tutup
+          </button>
+        </div>
       </div>
     </div>
-  </main>
 
-  <!-- Footer Bawah -->
-  <footer class="theme-transition text-center text-xs text-slate-400 dark:text-slate-600 py-2 z-10">
-    &copy; <span id="year"></span> Galeri Kenangan &bull; Dibuat dengan Cinta
-  </footer>
+    <script>
+      // Inisialisasi ikon Lucide
+      lucide.createIcons();
 
-  <!-- Modal Panduan (Overlay Full Screen Responsif) -->
-  <div 
-    id="modal-guide" 
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md hidden transition-opacity duration-300 opacity-0"
-  >
-    <div class="theme-transition max-w-sm sm:max-w-md w-full rounded-3xl shadow-2xl overflow-hidden bg-white text-slate-800 dark:bg-slate-900 dark:text-white transform scale-95 transition-transform duration-300 border border-slate-100 dark:border-slate-800">
+      // Set tahun secara dinamis
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      // Seleksi Elemen DOM
+      const themeToggleBtn = document.getElementById('theme-toggle');
+      const moonIcon = document.getElementById('theme-icon-moon');
+      const sunIcon = document.getElementById('theme-icon-sun');
       
-      <!-- Modal Header -->
-      <div class="theme-transition flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800">
-        <h2 class="text-base sm:text-lg font-bold flex items-center gap-2">
-          <i data-lucide="qr-code" class="text-blue-500 w-5 h-5"></i>
-          Panduan Unduh Foto
-        </h2>
-        <button 
-          id="btn-close-modal"
-          class="theme-transition p-1.5 rounded-full hover:bg-slate-100 text-slate-500 dark:hover:bg-slate-800 dark:text-slate-400"
-        >
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
+      // DOM Modal Panduan
+      const modalGuide = document.getElementById('modal-guide');
+      const btnGuide = document.getElementById('btn-guide');
+      const btnCloseModal = document.getElementById('btn-close-modal');
+      const btnUnderstand = document.getElementById('btn-understand');
 
-      <!-- Modal Body -->
-      <div class="p-5 sm:p-6 space-y-4sm:space-y-5">
-        <div class="flex gap-3.5 sm:gap-4 items-start">
-          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">1</div>
-          <div>
-            <h3 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Buka Kamera HP</h3>
-            <p class="theme-transition text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Buka aplikasi kamera bawaan di HP Anda, atau gunakan aplikasi pemindai QR.</p>
-          </div>
-        </div>
-        
-        <div class="flex gap-3.5 sm:gap-4 items-start">
-          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">2</div>
-          <div>
-            <h3 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Arahkan ke Kode QR</h3>
-            <p class="theme-transition text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Arahkan lensa kamera HP Anda tepat ke arah gambar QR code di layar.</p>
-          </div>
-        </div>
+      // DOM Modal QR Code
+      const modalQrcode = document.getElementById('modal-qrcode');
+      const btnQrcode = document.getElementById('btn-qrcode');
+      const btnCloseQrcode = document.getElementById('btn-close-qrcode');
+      const btnUnderstandQrcode = document.getElementById('btn-understand-qrcode');
 
-        <div class="flex gap-3.5 sm:gap-4 items-start">
-          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">3</div>
-          <div>
-            <h3 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Ketuk Link & Unduh</h3>
-            <p class="theme-transition text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Ketuk link Google Drive yang terdeteksi, lalu pilih dan unduh foto favorit Anda.</p>
-          </div>
-        </div>
-      </div>
+      // Cek preferensi tema bawaan sistem atau default ke Light
+      let isDarkMode = localStorage.getItem('theme') === 'dark' || 
+        (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
-      <!-- Modal Footer -->
-      <div class="theme-transition p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
-        <button 
-          id="btn-understand"
-          class="w-full py-2.5 sm:py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors shadow-md"
-        >
-          Saya Mengerti
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // Inisialisasi ikon Lucide
-    lucide.createIcons();
-
-    // Set tahun secara dinamis
-    document.getElementById('year').textContent = new Date().getFullYear();
-
-    // Seleksi Elemen DOM
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    const moonIcon = document.getElementById('theme-icon-moon');
-    const sunIcon = document.getElementById('theme-icon-sun');
-    const modalGuide = document.getElementById('modal-guide');
-    const btnGuide = document.getElementById('btn-guide');
-    const btnCloseModal = document.getElementById('btn-close-modal');
-    const btnUnderstand = document.getElementById('btn-understand');
-
-    // Cek preferensi tema bawaan sistem atau default ke Light
-    let isDarkMode = localStorage.getItem('theme') === 'dark' || 
-      (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-    // Fungsi Pengaturan Tema Awal
-    function initTheme() {
-      if (isDarkMode) {
-        document.documentElement.classList.add('dark');
-        moonIcon.classList.add('hidden');
-        sunIcon.classList.remove('hidden');
-      } else {
-        document.documentElement.classList.remove('dark');
-        sunIcon.classList.add('hidden');
-        moonIcon.classList.remove('hidden');
+      // Fungsi Pengaturan Tema Awal
+      function initTheme() {
+        if (isDarkMode) {
+          document.documentElement.classList.add('dark');
+          moonIcon.classList.add('hidden');
+          sunIcon.classList.remove('hidden');
+        } else {
+          document.documentElement.classList.remove('dark');
+          sunIcon.classList.add('hidden');
+          moonIcon.classList.remove('hidden');
+        }
       }
-    }
-    initTheme();
+      initTheme();
 
-    // Fungsi Ganti Tema
-    function toggleTheme() {
-      isDarkMode = !isDarkMode;
-      if (isDarkMode) {
-        document.documentElement.classList.add('dark');
-        moonIcon.classList.add('hidden');
-        sunIcon.classList.remove('hidden');
-        localStorage.setItem('theme', 'dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-        sunIcon.classList.add('hidden');
-        moonIcon.classList.remove('hidden');
-        localStorage.setItem('theme', 'light');
+      // Fungsi Ganti Tema
+      function toggleTheme() {
+        isDarkMode = !isDarkMode;
+        if (isDarkMode) {
+          document.documentElement.classList.add('dark');
+          moonIcon.classList.add('hidden');
+          sunIcon.classList.remove('hidden');
+          localStorage.setItem('theme', 'dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+          sunIcon.classList.add('hidden');
+          moonIcon.classList.remove('hidden');
+          localStorage.setItem('theme', 'light');
+        }
       }
-    }
 
-    // Fungsi Buka Modal (Dengan Animasi Fade & Scale)
-    function openModal() {
-      modalGuide.classList.remove('hidden');
-      // Berikan jeda mikro agar transisi CSS bekerja
-      setTimeout(() => {
-        modalGuide.classList.remove('opacity-0');
-        modalGuide.querySelector('div').classList.remove('scale-95');
-        modalGuide.querySelector('div').classList.add('scale-100');
-      }, 10);
-    }
-
-    // Fungsi Tutup Modal (Dengan Animasi Out)
-    function closeModal() {
-      modalGuide.classList.add('opacity-0');
-      modalGuide.querySelector('div').classList.remove('scale-100');
-      modalGuide.querySelector('div').classList.add('scale-95');
-      // Sembunyikan setelah transisi selesai (300ms)
-      setTimeout(() => {
-        modalGuide.classList.add('hidden');
-      }, 300);
-    }
-
-    // Event Listeners
-    themeToggleBtn.addEventListener('click', toggleTheme);
-    btnGuide.addEventListener('click', openModal);
-    btnCloseModal.addEventListener('click', closeModal);
-    btnUnderstand.addEventListener('click', closeModal);
-
-    // Menutup modal jika pengguna mengklik area luar modal (backdrop)
-    modalGuide.addEventListener('click', (e) => {
-      if (e.target === modalGuide) {
-        closeModal();
+      // Fungsi Buka Modal (Dengan Animasi Fade & Scale)
+      function openModal(modalElement) {
+        modalElement.classList.remove('hidden');
+        setTimeout(() => {
+          modalElement.classList.remove('opacity-0');
+          modalElement.querySelector('div').classList.remove('scale-95');
+          modalElement.querySelector('div').classList.add('scale-100');
+        }, 10);
       }
-    });
 
-    // Menutup modal dengan tombol Escape di keyboard
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !modalGuide.classList.contains('hidden')) {
-        closeModal();
+      // Fungsi Tutup Modal (Dengan Animasi Out)
+      function closeModal(modalElement) {
+        modalElement.classList.add('opacity-0');
+        modalElement.querySelector('div').classList.remove('scale-100');
+        modalElement.querySelector('div').classList.add('scale-95');
+        setTimeout(() => {
+          modalElement.classList.add('hidden');
+        }, 300);
       }
-    });
-  </script>
-</body>
-</html>
+
+      // Event Listeners Tema & Panduan
+      themeToggleBtn.addEventListener('click', toggleTheme);
+      btnGuide.addEventListener('click', () => openModal(modalGuide));
+      btnCloseModal.addEventListener('click', () => closeModal(modalGuide));
+      btnUnderstand.addEventListener('click', () => closeModal(modalGuide));
+
+      // Event Listeners QR Code
+      btnQrcode.addEventListener('click', () => openModal(modalQrcode));
+      btnCloseQrcode.addEventListener('click', () => closeModal(modalQrcode));
+      btnUnderstandQrcode.addEventListener('click', () => closeModal(modalQrcode));
+
+      // Menutup modal jika pengguna mengklik area luar modal (backdrop)
+      window.addEventListener('click', (e) => {
+        if (e.target === modalGuide) {
+          closeModal(modalGuide);
+        }
+        if (e.target === modalQrcode) {
+          closeModal(modalQrcode);
+        }
+      });
+
+      // Menutup modal dengan tombol Escape di keyboard
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (!modalGuide.classList.contains('hidden')) {
+            closeModal(modalGuide);
+          }
+          if (!modalQrcode.classList.contains('hidden')) {
+            closeModal(modalQrcode);
+          }
+        }
+      });
+
+      // Pembuatan QR Code Dinamis saat Dokumen Siap
+      window.addEventListener('DOMContentLoaded', () => {
+        const qrCanvas = document.getElementById('qr-code-canvas');
+        if (qrCanvas && typeof QRious !== 'undefined') {
+          new QRious({
+            element: qrCanvas,
+            value: 'https://drive.google.com/drive/folders/12J3cC_axt07ZzivdoYct4jnzCCJJi9WP?usp=sharing',
+            size: 250,
+            background: '#ffffff',
+            foreground: '#0f172a', // Slate-900 untuk kontras tinggi
+            level: 'H' // Level koreksi kesalahan tertinggi untuk performa pindai optimal
+          });
+        }
+      });
+    </script>
+  </body>
+  </html>
