@@ -20,6 +20,7 @@
             'float': 'float 6s ease-in-out infinite',
             'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
             'slow-pan': 'slowPan 20s linear infinite alternate',
+            'attention': 'attention 2s ease-in-out infinite',
           },
           keyframes: {
             float: {
@@ -33,6 +34,10 @@
             slowPan: {
               '0%': { transform: 'translate3d(0, 0, 0) scale(1)' },
               '100%': { transform: 'translate3d(5%, 10%, 0) scale(1.05)' },
+            },
+            attention: {
+              '0%, 100%': { transform: 'scale(1) translateY(0)' },
+              '50%': { transform: 'scale(1.03) translateY(-5px)' },
             }
           }
         }
@@ -144,7 +149,7 @@
         </p>
 
         <h1 class="text-5xl sm:text-7xl font-serif italic tracking-tight text-slate-900 dark:text-white mb-4 leading-tight drop-shadow-sm">
-          Anggi <span class="font-sans text-3xl sm:text-5xl mx-2 font-light not-italic text-slate-400">&amp;</span> Ilham
+          <span id="display-bride">Anggi</span> <span class="font-sans text-3xl sm:text-5xl mx-2 font-light not-italic text-slate-400">&amp;</span> <span id="display-groom">Ilham</span>
         </h1>
 
         <div class="flex items-center justify-center gap-4 my-6">
@@ -153,7 +158,7 @@
           <div class="h-[1px] w-16 bg-slate-300 dark:bg-slate-700"></div>
         </div>
 
-        <p class="text-xs sm:text-sm font-bold tracking-wide text-slate-600 dark:text-slate-300 max-w-md mx-auto">
+        <p id="display-date" class="text-xs sm:text-sm font-bold tracking-wide text-slate-600 dark:text-slate-300 max-w-md mx-auto">
           Sabtu &bull; 7 November 2026
         </p>
       </div>
@@ -161,20 +166,25 @@
       <!-- TAMPILAN 1: NAVIGATION MENU utama -->
       <section id="view-menu" class="p-8 sm:p-12 flex flex-col items-center">
         
-        <!-- Susunan Tombol Baru Sesuai Request (Latar lebih solid untuk kontras tinggi) -->
+        <!-- Susunan Tombol Sesuai Request (Warna Diseragamkan Semua) -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-3xl">
           
-          <!-- 1. AMBIL FOTO (Galeri) -->
-          <button onclick="switchView('album')" class="group p-8 rounded-[2rem] bg-white dark:bg-neutral-800 hover:bg-slate-50 dark:hover:bg-neutral-700 border border-slate-200 dark:border-neutral-700 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col items-center justify-center text-center">
-            <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-neutral-900 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-slate-200 dark:border-neutral-700">
+          <!-- 1. GALERI FOTO (Galeri) dengan Animasi Perhatian -->
+          <button onclick="switchView('album')" class="animate-attention group p-8 rounded-[2rem] bg-white dark:bg-neutral-800 hover:bg-slate-50 dark:hover:bg-neutral-700 border border-slate-200 dark:border-neutral-700 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col items-center justify-center text-center relative overflow-hidden">
+            <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-neutral-900 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-slate-200 dark:border-neutral-700 relative">
+              <!-- Dot indicator animasi -->
+              <span class="absolute top-0 right-0 flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-900 dark:bg-white opacity-40"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-slate-900 dark:bg-white"></span>
+              </span>
               <i data-lucide="image" class="w-7 h-7 text-slate-900 dark:text-white stroke-[1.5]"></i>
             </div>
-            <h3 class="font-bold text-sm tracking-wide text-slate-900 dark:text-white mb-2 uppercase">AMBIL FOTO</h3>
-            <p class="text-[11px] text-slate-600 dark:text-slate-400 font-medium tracking-wide">Galeri Interaktif</p>
+            <h3 class="font-bold text-sm tracking-wide text-slate-900 dark:text-white mb-2 uppercase">GALERI FOTO</h3>
+            <p class="text-[11px] text-slate-600 dark:text-slate-400 font-medium tracking-wide">Lihat Koleksi Foto</p>
           </button>
 
           <!-- 2. Buka Drive (Tautan Langsung) -->
-          <a href="https://drive.google.com/drive/folders/1sZJqOYCSK1282VZ1YP7Yl1zRpoFumUFJ?usp=sharing" target="_blank" rel="noopener noreferrer" class="group p-8 rounded-[2rem] bg-white dark:bg-neutral-800 hover:bg-slate-50 dark:hover:bg-neutral-700 border border-slate-200 dark:border-neutral-700 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col items-center justify-center text-center">
+          <a id="link-buka-drive" href="https://drive.google.com/drive/folders/1sZJqOYCSK1282VZ1YP7Yl1zRpoFumUFJ?usp=sharing" target="_blank" rel="noopener noreferrer" class="group p-8 rounded-[2rem] bg-white dark:bg-neutral-800 hover:bg-slate-50 dark:hover:bg-neutral-700 border border-slate-200 dark:border-neutral-700 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col items-center justify-center text-center">
             <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-neutral-900 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-slate-200 dark:border-neutral-700">
               <i data-lucide="cloud" class="w-7 h-7 text-slate-900 dark:text-white stroke-[1.5]"></i>
             </div>
@@ -182,13 +192,13 @@
             <p class="text-[11px] text-slate-600 dark:text-slate-400 font-medium tracking-wide">Akses Folder Cloud</p>
           </a>
 
-          <!-- 3. Ambil Moment (Photobooth Studio) -->
-          <button onclick="startPhotobooth()" class="group p-8 rounded-[2rem] bg-black dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-200 shadow-xl transition-all duration-300 flex flex-col items-center justify-center text-center border border-black dark:border-white">
-            <div class="w-16 h-16 rounded-full bg-white/10 dark:bg-black/10 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
-              <i data-lucide="camera" class="w-7 h-7 text-white dark:text-black stroke-[1.5]"></i>
+          <!-- 3. PHOTOBOOTH (Studio) -->
+          <button onclick="startPhotobooth()" class="group p-8 rounded-[2rem] bg-white dark:bg-neutral-800 hover:bg-slate-50 dark:hover:bg-neutral-700 border border-slate-200 dark:border-neutral-700 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col items-center justify-center text-center">
+            <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-neutral-900 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-slate-200 dark:border-neutral-700">
+              <i data-lucide="camera" class="w-7 h-7 text-slate-900 dark:text-white stroke-[1.5]"></i>
             </div>
-            <h3 class="font-bold text-sm tracking-wide text-white dark:text-black mb-2 uppercase">PHOTOBOTH</h3>
-            <p class="text-[11px] text-neutral-300 dark:text-neutral-600 font-medium tracking-wide">Studio Photobooth</p>
+            <h3 class="font-bold text-sm tracking-wide text-slate-900 dark:text-white mb-2 uppercase">PHOTOBOOTH</h3>
+            <p class="text-[11px] text-slate-600 dark:text-slate-400 font-medium tracking-wide">Studio Photobooth</p>
           </button>
 
         </div>
@@ -277,38 +287,85 @@
         </div>
       </section>
 
-      <!-- TAMPILAN 3: ALBUM GALERI -->
-      <section id="view-album" class="p-6 sm:p-10 hidden flex flex-col items-center animate-slide-up">
-        <div class="w-full max-w-[460px] flex justify-between items-center px-2 mb-6">
-          <button onclick="switchView('menu')" class="inline-flex items-center gap-2 text-xs font-bold tracking-wide text-slate-800 dark:text-slate-200 bg-white dark:bg-neutral-800 px-4 py-2 rounded-full shadow-sm hover:shadow-md border border-slate-200 dark:border-neutral-700 transition-all uppercase">
-            <i data-lucide="arrow-left" class="w-4 h-4 stroke-[2]"></i> Kembali
-          </button>
-          <span class="flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase text-slate-800 dark:text-slate-200 bg-white dark:bg-neutral-800 px-4 py-2 rounded-full shadow-sm border border-slate-200 dark:border-neutral-700">
-            <i data-lucide="mouse" class="w-3.5 h-3.5 stroke-[1.5]"></i> Scroll
-          </span>
-        </div>
-
-        <div class="w-full max-w-[460px] h-[65vh] rounded-[2rem] shadow-xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 overflow-hidden relative group">
-          <div class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 pointer-events-none bg-slate-50 dark:bg-neutral-900">
-            <i data-lucide="loader-circle" class="w-8 h-8 animate-spin text-slate-900 dark:text-white mb-3 stroke-[1.5]"></i>
-            <span class="text-xs font-bold tracking-widest uppercase">Memuat Galeri...</span>
-          </div>
-          <iframe 
-            src="https://drive.google.com/embeddedfolderview?id=1sZJqOYCSK1282VZ1YP7Yl1zRpoFumUFJ#grid" 
-            class="w-full h-full relative z-10 bg-transparent"
-            style="border: none;"
-            allowfullscreen>
-          </iframe>
-        </div>
-      </section>
-
     </div>
   </main>
 
+  <!-- TAMPILAN 3: ALBUM GALERI (DIBUAT FULL SCREEN & EDGE-TO-EDGE) -->
+  <section id="view-album" class="fixed inset-0 z-[150] bg-slate-50 dark:bg-neutral-950 hidden animate-slide-up">
+    <div class="flex flex-col w-full h-full">
+      <!-- Navbar Galeri Khusus -->
+      <div class="w-full flex-none flex justify-between items-center px-4 py-3 sm:px-8 bg-white dark:bg-neutral-900 shadow-md border-b border-slate-200 dark:border-neutral-800 z-20">
+        <button onclick="switchView('menu')" class="inline-flex items-center gap-2 text-[11px] font-bold tracking-wide text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 px-4 py-2 rounded-full shadow-sm transition-all uppercase border border-slate-200 dark:border-neutral-700">
+          <i data-lucide="arrow-left" class="w-4 h-4 stroke-[2]"></i> Kembali
+        </button>
+        
+        <!-- Info Petunjuk Unduh Foto -->
+        <span class="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-wider uppercase text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-neutral-800 px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-neutral-700">
+          <i data-lucide="download shadow-sm" class="w-3.5 h-3.5 text-black dark:text-white stroke-[2]"></i> Klik foto untuk unduh
+        </span>
+      </div>
+
+      <!-- Iframe Memenuhi 100% Layar Tanpa Text Background -->
+      <div class="w-full flex-grow relative bg-slate-50 dark:bg-neutral-950">
+        <iframe 
+          id="iframe-galeri"
+          src="https://drive.google.com/embeddedfolderview?id=1sZJqOYCSK1282VZ1YP7Yl1zRpoFumUFJ#grid" 
+          class="w-full h-full relative z-10 border-none bg-transparent"
+          style="border: none;"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </div>
+  </section>
+
   <!-- Footer Bawah Minimalis -->
   <footer class="text-center text-[10px] font-bold tracking-widest uppercase text-slate-600 dark:text-slate-400 py-6 w-full z-10 mt-auto drop-shadow-sm">
-    &copy; <span id="year"></span> draftgraphy Design by @ahmdrosyidd
+    &copy; <span id="year"></span> draftgraphy Design by <span onclick="openModal(modalAdmin)" class="cursor-text select-none text-slate-600 dark:text-slate-400">@ahmdrosyidd</span>
   </footer>
+
+  <!-- Modal Admin (Hidden Settings) -->
+  <div id="modal-admin" class="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-sm hidden transition-opacity duration-300 opacity-0">
+    <div class="theme-transition max-w-sm w-full rounded-[2rem] shadow-2xl overflow-hidden bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]">
+      <div class="p-6 border-b border-slate-100 dark:border-neutral-800 flex items-center justify-between">
+        <h2 class="text-sm font-bold tracking-wide uppercase flex items-center gap-2 text-slate-900 dark:text-white">
+          <i data-lucide="settings" class="w-4 h-4 stroke-[2]"></i> Config
+        </h2>
+        <button onclick="closeAdminModal()" class="p-2 rounded-full bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-900 dark:text-white transition-colors">
+          <i data-lucide="x" class="w-4 h-4 stroke-[2]"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto">
+        <!-- Form Login -->
+        <div id="admin-login-section" class="space-y-4">
+          <input type="password" id="admin-password" class="w-full p-3 rounded-xl border border-slate-300 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-white text-sm" placeholder="Password">
+          <p id="admin-error" class="text-red-500 text-[10px] hidden font-bold">Password salah!</p>
+          <button onclick="checkAdminPassword()" class="w-full py-3 bg-black dark:bg-white text-white dark:text-black font-bold text-xs tracking-widest uppercase rounded-xl mt-2 transition-transform hover:scale-[1.02] shadow-md">Akses</button>
+        </div>
+
+        <!-- Form Pengaturan -->
+        <div id="admin-settings-section" class="space-y-4 hidden">
+          <div>
+            <label class="block text-[10px] font-bold tracking-widest uppercase text-slate-600 dark:text-slate-400 mb-1">Mempelai 1</label>
+            <input type="text" id="set-bride" class="w-full p-3 rounded-xl border border-slate-300 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-white text-sm">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold tracking-widest uppercase text-slate-600 dark:text-slate-400 mb-1">Mempelai 2</label>
+            <input type="text" id="set-groom" class="w-full p-3 rounded-xl border border-slate-300 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-white text-sm">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold tracking-widest uppercase text-slate-600 dark:text-slate-400 mb-1">Tanggal Pernikahan</label>
+            <input type="text" id="set-date" class="w-full p-3 rounded-xl border border-slate-300 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-white text-sm">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold tracking-widest uppercase text-slate-600 dark:text-slate-400 mb-1">Link G-Drive</label>
+            <input type="text" id="set-drive" class="w-full p-3 rounded-xl border border-slate-300 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-white text-xs">
+          </div>
+          <button onclick="saveAdminSettings()" class="w-full py-3 bg-black dark:bg-white text-white dark:text-black font-bold text-[11px] tracking-widest uppercase rounded-xl mt-4 transition-transform hover:scale-[1.02] shadow-md">Simpan Perubahan</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal Panduan -->
   <div id="modal-guide" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-sm hidden transition-opacity duration-300 opacity-0">
@@ -326,8 +383,8 @@
         <div class="flex gap-4 items-start">
           <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-neutral-800 flex items-center justify-center flex-shrink-0 font-bold text-xs border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white">1</div>
           <div>
-            <h3 class="font-bold text-sm tracking-wide text-slate-900 dark:text-white">Download Foto</h3>
-            <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">Pilih menu Download Foto untuk melihat dan menyimpan seluruh koleksi foto yang berada di galeri web.</p>
+            <h3 class="font-bold text-sm tracking-wide text-slate-900 dark:text-white">Galeri Foto</h3>
+            <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">Pilih menu Galeri Foto untuk melihat dan menyimpan seluruh koleksi foto yang berada di galeri web.</p>
           </div>
         </div>
         
@@ -342,7 +399,7 @@
         <div class="flex gap-4 items-start">
           <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-neutral-800 flex items-center justify-center flex-shrink-0 font-bold text-xs border border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-white">3</div>
           <div>
-            <h3 class="font-bold text-sm tracking-wide text-slate-900 dark:text-white">Ambil Moment</h3>
+            <h3 class="font-bold text-sm tracking-wide text-slate-900 dark:text-white">Photobooth</h3>
             <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">Masuk ke studio, bergaya, dan cetak photobooth versi digital yang tersimpan otomatis.</p>
           </div>
         </div>
@@ -397,7 +454,35 @@
   <script>
     // --- KONFIGURASI GOOGLE DRIVE & APPS SCRIPT ---
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx-3Cg40eElzmYghvBv__8S3xc1GVXrUCGH6CimfKZm0Vmil_Y0CWMKth9W_ka0lZUhzQ/exec"; 
-    const ALBUM_DRIVE_URL = "https://drive.google.com/drive/folders/1sZJqOYCSK1282VZ1YP7Yl1zRpoFumUFJ?usp=sharing";
+    let ALBUM_DRIVE_URL = "https://drive.google.com/drive/folders/1sZJqOYCSK1282VZ1YP7Yl1zRpoFumUFJ?usp=sharing";
+
+    // Inisialisasi Config dinamis (Disiapkan Global untuk Cloud)
+    window.defaultConfig = {
+      bride: "Anggi",
+      groom: "Ilham",
+      date: "Sabtu &bull; 7 November 2026",
+      driveLink: "https://drive.google.com/drive/folders/1sZJqOYCSK1282VZ1YP7Yl1zRpoFumUFJ?usp=sharing"
+    };
+    window.appConfig = JSON.parse(localStorage.getItem('weddingConfig')) || window.defaultConfig;
+
+    window.applyConfig = function() {
+      document.getElementById('display-bride').innerHTML = window.appConfig.bride;
+      document.getElementById('display-groom').innerHTML = window.appConfig.groom;
+      document.getElementById('display-date').innerHTML = window.appConfig.date;
+      
+      const linkBtn = document.getElementById('link-buka-drive');
+      if(linkBtn) linkBtn.href = window.appConfig.driveLink;
+      
+      // Ambil ID folder untuk iframe Galeri secara otomatis dari link
+      const folderIdMatch = window.appConfig.driveLink.match(/(?:folders\/|id=)([\w-]+)/);
+      const folderId = folderIdMatch ? folderIdMatch[1] : '1sZJqOYCSK1282VZ1YP7Yl1zRpoFumUFJ';
+      
+      const iframeEl = document.getElementById('iframe-galeri');
+      if(iframeEl) iframeEl.src = `https://drive.google.com/embeddedfolderview?id=${folderId}#grid`;
+      
+      ALBUM_DRIVE_URL = window.appConfig.driveLink;
+      generateQRCode();
+    }
 
     // Inisialisasi Icons & Dynamic Year
     lucide.createIcons();
@@ -463,6 +548,7 @@
     // --- SYSTEM MODAL ---
     const modalGuide = document.getElementById('modal-guide');
     const modalQrcode = document.getElementById('modal-qrcode');
+    const modalAdmin = document.getElementById('modal-admin');
 
     function openModal(modalElement) {
       modalElement.classList.remove('hidden');
@@ -482,24 +568,74 @@
       }, 300);
     }
 
+    function closeAdminModal() {
+      closeModal(modalAdmin);
+      setTimeout(() => {
+        document.getElementById('admin-login-section').classList.remove('hidden');
+        document.getElementById('admin-settings-section').classList.add('hidden');
+        document.getElementById('admin-password').value = '';
+        document.getElementById('admin-error').classList.add('hidden');
+      }, 300);
+    }
+
     window.addEventListener('click', (e) => {
       if (e.target === modalGuide) closeModal(modalGuide);
       if (e.target === modalQrcode) closeModal(modalQrcode);
+      if (e.target === modalAdmin) closeAdminModal();
     });
 
+    // --- SYSTEM ADMIN LOGIC ---
+    function checkAdminPassword() {
+      const pwd = document.getElementById('admin-password').value;
+      if (pwd === '21R$yd09') {
+        document.getElementById('admin-login-section').classList.add('hidden');
+        document.getElementById('admin-settings-section').classList.remove('hidden');
+        document.getElementById('admin-error').classList.add('hidden');
+        
+        // Isi form dengan data terbaru
+        document.getElementById('set-bride').value = window.appConfig.bride;
+        document.getElementById('set-groom').value = window.appConfig.groom;
+        document.getElementById('set-date').value = window.appConfig.date.replace(/&bull;/g, '•');
+        document.getElementById('set-drive').value = window.appConfig.driveLink;
+      } else {
+        document.getElementById('admin-error').classList.remove('hidden');
+      }
+    }
+
+    window.saveAdminSettingsLocal = function() {
+      window.appConfig.bride = document.getElementById('set-bride').value;
+      window.appConfig.groom = document.getElementById('set-groom').value;
+      window.appConfig.date = document.getElementById('set-date').value.replace(/•/g, '&bull;');
+      window.appConfig.driveLink = document.getElementById('set-drive').value;
+      
+      localStorage.setItem('weddingConfig', JSON.stringify(window.appConfig));
+      window.applyConfig();
+      closeAdminModal();
+    }
+
+    // Default fungsi simpan (Bisa ditimpa oleh Cloud Module nanti)
+    window.saveAdminSettings = window.saveAdminSettingsLocal;
+
     // QR Code Generation
-    window.addEventListener('DOMContentLoaded', () => {
+    let qrInstance = null;
+    function generateQRCode() {
       const qrCanvas = document.getElementById('qr-code-canvas');
       if (qrCanvas && typeof QRious !== 'undefined') {
-        new QRious({
-          element: qrCanvas,
-          value: ALBUM_DRIVE_URL,
-          size: 200,
-          background: '#ffffff',
-          foreground: '#000000',
-          level: 'H'
-        });
+        if (!qrInstance) {
+          qrInstance = new QRious({
+            element: qrCanvas,
+            size: 200,
+            background: '#ffffff',
+            foreground: '#000000',
+            level: 'H'
+          });
+        }
+        qrInstance.value = ALBUM_DRIVE_URL;
       }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      applyConfig();
     });
 
     // --- SYSTEM PHOTOBOOTH ENGINE ---
@@ -748,6 +884,63 @@
       
       document.getElementById('snap-btn').disabled = false;
       drawFinal();
+    }
+  </script>
+
+  <!-- CLOUD SYNC MODULE (Membuat perubahan tersimpan di semua device) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Cek apakah env web menyediakan konfigurasi cloud
+    if (typeof __firebase_config !== 'undefined') {
+      const appId = typeof __app_id !== 'undefined' ? __app_id : 'draftgraphy-app';
+      const firebaseConfig = JSON.parse(__firebase_config);
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      async function initCloudSync() {
+        try {
+          // 1. Autentikasi Pengunjung
+          if (typeof __initial_auth_token !== 'undefined') {
+            await signInWithCustomToken(auth, __initial_auth_token);
+          } else {
+            await signInAnonymously(auth);
+          }
+          
+          const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'globalConfig');
+          
+          // 2. Dengarkan perubahan dari admin lain secara Real-Time
+          onSnapshot(configRef, (docSnap) => {
+            if (docSnap.exists()) {
+              window.appConfig = { ...window.defaultConfig, ...docSnap.data() };
+              window.applyConfig();
+              localStorage.setItem('weddingConfig', JSON.stringify(window.appConfig)); // update juga offline backupnya
+            }
+          }, (error) => {
+            console.error("Cloud Sync Error:", error);
+          });
+
+          // 3. Timpa fungsi save admin agar mengunggah data ke Cloud Database
+          window.saveAdminSettings = async function() {
+            // Ubah UI terlebih dahulu agar terasa cepat (Optimistic UI)
+            window.saveAdminSettingsLocal(); 
+            
+            // Unggah ke Cloud Database agar semua device lain ikut berubah
+            try {
+              await setDoc(configRef, window.appConfig, { merge: true });
+            } catch(err) {
+              console.error("Gagal menyimpan ke Cloud, pastikan koneksi internet aktif", err);
+            }
+          };
+
+        } catch(e) {
+          console.error("Cloud initialization failed:", e);
+        }
+      }
+      initCloudSync();
     }
   </script>
 </body>
