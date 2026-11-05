@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>The Wedding of Anggi & Ilham</title>
+  <title>The Wedding</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -431,6 +431,7 @@
         </p>
 
         <a 
+          id="qr-link-wrapper"
           href="https://drive.google.com/drive/folders/1sZJqOYCSK1282VZ1YP7Yl1zRpoFumUFJ?usp=sharing" 
           target="_blank" 
           rel="noopener noreferrer" 
@@ -469,9 +470,15 @@
       document.getElementById('display-bride').innerHTML = window.appConfig.bride;
       document.getElementById('display-groom').innerHTML = window.appConfig.groom;
       document.getElementById('display-date').innerHTML = window.appConfig.date;
+
+      // Update Title Dokumen secara dinamis
+      document.title = `The Wedding of ${window.appConfig.bride} & ${window.appConfig.groom}`;
       
       const linkBtn = document.getElementById('link-buka-drive');
       if(linkBtn) linkBtn.href = window.appConfig.driveLink;
+      
+      const qrLinkWrapper = document.getElementById('qr-link-wrapper');
+      if(qrLinkWrapper) qrLinkWrapper.href = window.appConfig.driveLink;
       
       // Ambil ID folder untuk iframe Galeri secara otomatis dari link
       const folderIdMatch = window.appConfig.driveLink.match(/(?:folders\/|id=)([\w-]+)/);
@@ -671,7 +678,7 @@
             level: 'H'
           });
         }
-        qrInstance.value = ALBUM_DRIVE_URL;
+        qrInstance.set({ value: ALBUM_DRIVE_URL });
       }
     }
 
@@ -890,8 +897,11 @@
     }
 
     function downloadResultImage() {
+      const brideName = (window.appConfig && window.appConfig.bride ? window.appConfig.bride : "ANGGI").toUpperCase();
+      const groomName = (window.appConfig && window.appConfig.groom ? window.appConfig.groom : "ILHAM").toUpperCase();
+      
       const link = document.createElement('a');
-      link.download = `STUDIO-ANGGI-ILHAM-${sessionIdName}.png`;
+      link.download = `STUDIO-${brideName}-${groomName}-${sessionIdName}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     }
