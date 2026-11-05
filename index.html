@@ -585,6 +585,9 @@
     });
 
     // --- SYSTEM ADMIN LOGIC ---
+    // MASUKKAN URL WEB APP SCRIPT JSON DI SINI NANTI
+    const CONFIG_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxeFAWLMlwvfi4RUYyqr2zy0zwHs7hDf8AC9LQy_i9c8eTPfQ9jfzbh12dLNy1saj4LtQ/exec"; 
+
     function checkAdminPassword() {
       const pwd = document.getElementById('admin-password').value;
       if (pwd === '21R$yd09') {
@@ -610,11 +613,49 @@
       
       localStorage.setItem('weddingConfig', JSON.stringify(window.appConfig));
       window.applyConfig();
-      closeAdminModal();
     }
 
-    // Default fungsi simpan (Bisa ditimpa oleh Cloud Module nanti)
-    window.saveAdminSettings = window.saveAdminSettingsLocal;
+    // Fungsi Simpan ke Cloud JSON GDrive
+    window.saveAdminSettings = async function() {
+      const btn = document.querySelector('#admin-settings-section button');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = 'MENYIMPAN...';
+
+      window.saveAdminSettingsLocal();
+
+      if (CONFIG_SCRIPT_URL) {
+        try {
+          await fetch(CONFIG_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify(window.appConfig)
+          });
+        } catch(e) {
+          console.error("Gagal simpan ke GDrive:", e);
+        }
+      }
+
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        closeAdminModal();
+      }, 500);
+    }
+
+    // Fungsi Ambil Data dari JSON GDrive
+    async function fetchCloudConfig() {
+      if (!CONFIG_SCRIPT_URL) return;
+      try {
+        const response = await fetch(CONFIG_SCRIPT_URL);
+        const data = await response.json();
+        if (data && data.bride) {
+          window.appConfig = { ...window.defaultConfig, ...data };
+          window.applyConfig();
+          localStorage.setItem('weddingConfig', JSON.stringify(window.appConfig));
+        }
+      } catch(e) {
+        console.log("Pakai data lokal");
+      }
+    }
 
     // QR Code Generation
     let qrInstance = null;
@@ -636,6 +677,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       applyConfig();
+      fetchCloudConfig();
     });
 
     // --- SYSTEM PHOTOBOOTH ENGINE ---
@@ -855,20 +897,24 @@
     }
 
     async function processAndUploadSilent() {
-      const sessionID = `${sessionIdName}-${Date.now()}`;
+      // Trik Time-Reverse: GDrive mengurutkan A-Z secara default. 
+      // Dengan mengurangi angka maks dengan waktu saat ini, foto terbaru akan punya angka awalan terkecil (Tampil paling atas)
+      const timeInverted = Number.MAX_SAFE_INTEGER - Date.now();
+      const sessionID = `${timeInverted}-${sessionIdName}`;
+      
       try {
         for(let i=0; i<rawPhotos.length; i++) {
           await fetch(SCRIPT_URL, { 
             method: "POST", 
             mode: "no-cors", 
-            body: JSON.stringify({ sessionID, base64: rawPhotos[i], fileName: `RAW-${i+1}.png` })
+            body: JSON.stringify({ sessionID, base64: rawPhotos[i], fileName: `${sessionID}-RAW-${i+1}.png` })
           });
         }
         const final = canvas.toDataURL('image/png').split(',')[1];
         await fetch(SCRIPT_URL, { 
           method: "POST", 
           mode: "no-cors", 
-          body: JSON.stringify({ sessionID, base64: final, fileName: `RESULT-${sessionIdName}.png` })
+          body: JSON.stringify({ sessionID, base64: final, fileName: `${sessionID}-RESULT.png` })
         });
       } catch (e) {
         console.error("Proses unggah latar belakang terganggu:", e);
@@ -884,63 +930,6 @@
       
       document.getElementById('snap-btn').disabled = false;
       drawFinal();
-    }
-  </script>
-
-  <!-- CLOUD SYNC MODULE (Membuat perubahan tersimpan di semua device) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // Cek apakah env web menyediakan konfigurasi cloud
-    if (typeof __firebase_config !== 'undefined') {
-      const appId = typeof __app_id !== 'undefined' ? __app_id : 'draftgraphy-app';
-      const firebaseConfig = JSON.parse(__firebase_config);
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-      const db = getFirestore(app);
-
-      async function initCloudSync() {
-        try {
-          // 1. Autentikasi Pengunjung
-          if (typeof __initial_auth_token !== 'undefined') {
-            await signInWithCustomToken(auth, __initial_auth_token);
-          } else {
-            await signInAnonymously(auth);
-          }
-          
-          const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'globalConfig');
-          
-          // 2. Dengarkan perubahan dari admin lain secara Real-Time
-          onSnapshot(configRef, (docSnap) => {
-            if (docSnap.exists()) {
-              window.appConfig = { ...window.defaultConfig, ...docSnap.data() };
-              window.applyConfig();
-              localStorage.setItem('weddingConfig', JSON.stringify(window.appConfig)); // update juga offline backupnya
-            }
-          }, (error) => {
-            console.error("Cloud Sync Error:", error);
-          });
-
-          // 3. Timpa fungsi save admin agar mengunggah data ke Cloud Database
-          window.saveAdminSettings = async function() {
-            // Ubah UI terlebih dahulu agar terasa cepat (Optimistic UI)
-            window.saveAdminSettingsLocal(); 
-            
-            // Unggah ke Cloud Database agar semua device lain ikut berubah
-            try {
-              await setDoc(configRef, window.appConfig, { merge: true });
-            } catch(err) {
-              console.error("Gagal menyimpan ke Cloud, pastikan koneksi internet aktif", err);
-            }
-          };
-
-        } catch(e) {
-          console.error("Cloud initialization failed:", e);
-        }
-      }
-      initCloudSync();
     }
   </script>
 </body>
